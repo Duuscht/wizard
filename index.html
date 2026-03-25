@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 
 <html lang="de">
@@ -9,32 +7,42 @@
 <title>Was weiß das Internet über dich?</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
- :root {
-   --bg:#050a0f; --panel:#0a1520; --border:#0d2a3a;
-   --accent:#00c8ff; --accent2:#ff4d6d; --accent3:#39ff85;
-   --text:#c8e6f0; --muted:#4a7a8a;
-   --mono:'Share Tech Mono',monospace; --sans:'Syne',sans-serif;
- }
- *{box-sizing:border-box;margin:0;padding:0}
- body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden}
- body::before{content:'';position:fixed;inset:0;
-   background-image:linear-gradient(rgba(0,200,255,.03)1px,transparent 1px),
-     linear-gradient(90deg,rgba(0,200,255,.03)1px,transparent 1px);
-   background-size:40px 40px;pointer-events:none;z-index:0}
- .container{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  :root {
+    --bg:#050a0f; --panel:#0a1520; --border:#0d2a3a;
+    --accent:#00c8ff; --accent2:#ff4d6d; --accent3:#39ff85;
+    --warn:#ffb347; --text:#c8e6f0; --muted:#4a7a8a;
+    --mono:'Share Tech Mono',monospace; --sans:'Syne',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,200,255,.03)1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,200,255,.03)1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0}
 
-.version-wrap{text-align:center;margin-bottom:32px}
+.container{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+
+/* VERSION BADGE */
+.version-wrap{text-align:center;margin-bottom:28px}
 .version-badge{display:inline-flex;align-items:center;gap:10px;
 background:rgba(0,200,255,.06);border:1px solid rgba(0,200,255,.15);
 border-radius:3px;padding:5px 14px;font-size:10px;letter-spacing:2px;color:var(–muted)}
 .version-badge strong{color:var(–accent)}
 
+/* HEADER */
 header{text-align:center;margin-bottom:16px}
 .header-label{font-size:11px;letter-spacing:4px;color:var(–accent);text-transform:uppercase;margin-bottom:12px;opacity:.7}
 h1{font-family:var(–sans);font-size:clamp(28px,5vw,52px);font-weight:800;color:#fff;line-height:1.1;margin-bottom:12px}
 h1 span{color:var(–accent)}
-.subtitle{font-size:13px;color:var(–muted);letter-spacing:1px;margin-bottom:24px}
+.subtitle{font-size:13px;color:var(–muted);letter-spacing:1px;margin-bottom:20px}
 
+/* INTRO BOX */
+.intro-box{background:rgba(255,179,71,.05);border:1px solid rgba(255,179,71,.2);
+border-left:3px solid var(–warn);border-radius:4px;padding:18px 22px;margin-bottom:32px}
+.intro-box strong{color:var(–warn);font-size:12px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px}
+.intro-box p{font-size:12px;color:#c8b89a;line-height:1.8}
+
+/* CLOCK */
 .clock-section{background:var(–panel);border:1px solid var(–border);border-top:2px solid var(–accent);
 border-radius:4px;padding:32px;margin-bottom:32px;
 display:flex;align-items:center;gap:48px;flex-wrap:wrap;justify-content:center;position:relative}
@@ -42,73 +50,111 @@ display:flex;align-items:center;gap:48px;flex-wrap:wrap;justify-content:center;p
 font-size:10px;letter-spacing:3px;color:var(–accent3)}
 canvas#clock{display:block;filter:drop-shadow(0 0 12px rgba(0,200,255,.4))}
 .clock-digital{text-align:center}
-.time-display{font-family:var(–mono);font-size:clamp(38px,6vw,64px);color:#fff;letter-spacing:4px;line-height:1;
-text-shadow:0 0 30px rgba(0,200,255,.5);transition:opacity .5s}
+.time-display{font-family:var(–mono);font-size:clamp(38px,6vw,64px);color:#fff;
+letter-spacing:4px;line-height:1;text-shadow:0 0 30px rgba(0,200,255,.5);transition:opacity .5s}
 .date-display{font-size:14px;color:var(–accent);letter-spacing:3px;margin-top:10px;text-transform:uppercase}
 .timezone-display{font-size:11px;color:var(–muted);letter-spacing:2px;margin-top:6px}
 .sync-status{font-size:10px;letter-spacing:2px;margin-top:10px;padding:4px 10px;border-radius:2px;display:inline-block}
-.sync-status.online {background:rgba(57,255,133,.1);color:var(–accent3);border:1px solid rgba(57,255,133,.3)}
+.sync-status.online{background:rgba(57,255,133,.1);color:var(–accent3);border:1px solid rgba(57,255,133,.3)}
 .sync-status.offline{background:rgba(255,77,109,.1);color:var(–accent2);border:1px solid rgba(255,77,109,.3);animation:blink 1s step-end infinite}
 .sync-status.syncing{background:rgba(0,200,255,.1);color:var(–accent);border:1px solid rgba(0,200,255,.3)}
 @keyframes blink{50%{opacity:.3}}
 
+/* SECTION DIVIDERS */
+.section-title{margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+.section-title::before,.section-title::after{content:’’;flex:1;height:1px;background:var(–border)}
+.section-title span{font-size:10px;letter-spacing:4px;text-transform:uppercase;white-space:nowrap;padding:0 4px}
+.section-title.net span{color:var(–accent)}
+.section-title.bro span{color:#a78bfa}
+.section-title.dev span{color:var(–accent3)}
+.section-title.scr span{color:#fbbf24}
+.section-title.con span{color:#22d3ee}
+.section-title.fpr span{color:#f97316}
+.section-title.prv span{color:var(–accent2)}
+
+/* CARDS */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .card{background:var(–panel);border:1px solid var(–border);border-radius:4px;padding:20px 24px;
 position:relative;overflow:hidden;transition:border-color .3s;
 opacity:0;transform:translateY(16px);animation:revealCard .5s forwards}
 @keyframes revealCard{to{opacity:1;transform:translateY(0)}}
-.card:hover{border-color:rgba(0,200,255,.3)}
+.card:hover{border-color:rgba(0,200,255,.25)}
 .card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px}
-.card.cat-network::before{background:var(–accent)}
-.card.cat-browser::before{background:#a78bfa}
-.card.cat-device ::before{background:var(–accent3)}
-.card.cat-privacy::before{background:var(–accent2)}
-.card.cat-screen ::before{background:#fbbf24}
-.card.cat-warn   ::before{background:#ff4d6d}
+.card.net::before{background:var(–accent)}
+.card.bro::before{background:#a78bfa}
+.card.dev::before{background:var(–accent3)}
+.card.scr::before{background:#fbbf24}
+.card.con::before{background:#22d3ee}
+.card.fpr::before{background:#f97316}
+.card.prv::before{background:var(–accent2)}
 .card-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;opacity:.5}
-.card.cat-network .card-label{color:var(–accent)}
-.card.cat-browser .card-label{color:#a78bfa}
-.card.cat-device  .card-label{color:var(–accent3)}
-.card.cat-privacy .card-label{color:var(–accent2)}
-.card.cat-screen  .card-label{color:#fbbf24}
-.card.cat-warn    .card-label{color:#ff4d6d}
-.card-title{font-family:var(–sans);font-size:13px;font-weight:700;color:var(–muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+.card.net .card-label{color:var(–accent)}
+.card.bro .card-label{color:#a78bfa}
+.card.dev .card-label{color:var(–accent3)}
+.card.scr .card-label{color:#fbbf24}
+.card.con .card-label{color:#22d3ee}
+.card.fpr .card-label{color:#f97316}
+.card.prv .card-label{color:var(–accent2)}
+.card-title{font-family:var(–sans);font-size:13px;font-weight:700;color:var(–muted);
+margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
 .card-value{font-size:16px;color:#fff;word-break:break-all;line-height:1.4}
 .card-value.loading{color:var(–muted);animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .card-sub{font-size:11px;color:var(–muted);margin-top:4px}
 .card-sub2{font-size:11px;color:var(–muted);margin-top:2px}
+.card-warn{font-size:10px;color:var(–warn);margin-top:10px;padding-top:8px;
+border-top:1px solid rgba(255,179,71,.15);line-height:1.6;letter-spacing:.3px}
+.card-warn:not(:empty)::before{content:’⚠  ’}
 .card.wide{grid-column:1/-1}
-
-/* Warn-Karte: auffälligeres Styling */
-.card.cat-warn{border-color:rgba(255,77,109,.25);background:#0f0a0d}
-.card.cat-warn .card-value{font-size:14px;color:#ff4d6d}
-.card.cat-warn .card-sub{color:#a05060}
-
-/* Akku-Balken */
-.battery-wrap{display:flex;align-items:center;gap:12px;margin-top:6px}
-.battery-bar-outer{flex:1;height:10px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
-.battery-bar-inner{height:100%;border-radius:3px;transition:width .6s ease}
-.battery-pct{font-size:13px;color:#fff;min-width:38px;text-align:right}
-
 .ip-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(0,200,255,.08);
-border:1px solid rgba(0,200,255,.2);border-radius:3px;padding:8px 16px;font-size:22px;color:var(–accent);letter-spacing:2px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(–accent3);box-shadow:0 0 8px var(–accent3);
-animation:dotpulse 2s ease-in-out infinite;flex-shrink:0}
+border:1px solid rgba(0,200,255,.2);border-radius:3px;padding:8px 16px;
+font-size:22px;color:var(–accent);letter-spacing:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(–accent3);
+box-shadow:0 0 8px var(–accent3);animation:dotpulse 2s ease-in-out infinite;flex-shrink:0}
 @keyframes dotpulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
 
-.card:nth-child(1) {animation-delay:.05s}.card:nth-child(2) {animation-delay:.10s}
-.card:nth-child(3) {animation-delay:.15s}.card:nth-child(4) {animation-delay:.20s}
-.card:nth-child(5) {animation-delay:.25s}.card:nth-child(6) {animation-delay:.30s}
-.card:nth-child(7) {animation-delay:.35s}.card:nth-child(8) {animation-delay:.40s}
-.card:nth-child(9) {animation-delay:.45s}.card:nth-child(10){animation-delay:.50s}
-.card:nth-child(11){animation-delay:.55s}.card:nth-child(12){animation-delay:.60s}
-.card:nth-child(13){animation-delay:.65s}.card:nth-child(14){animation-delay:.70s}
-.card:nth-child(15){animation-delay:.75s}.card:nth-child(16){animation-delay:.80s}
-.card:nth-child(17){animation-delay:.85s}.card:nth-child(18){animation-delay:.90s}
-.card:nth-child(19){animation-delay:.95s}.card:nth-child(20){animation-delay:1.00s}
+/* FINGERPRINT SCORE */
+.fp-wrap{margin-top:8px;display:flex;align-items:center;gap:16px}
+.fp-num{font-size:44px;color:#f97316;letter-spacing:2px;line-height:1}
+.fp-right{flex:1}
+.fp-label{font-size:11px;color:var(–muted);margin-bottom:6px}
+.fp-bar{height:5px;background:var(–border);border-radius:3px;overflow:hidden}
+.fp-bar-fill{height:100%;border-radius:3px;
+background:linear-gradient(90deg,#22d3ee,#f97316,#ff4d6d);
+width:0;transition:width 1.5s cubic-bezier(.25,1,.5,1)}
 
-footer{text-align:center;margin-top:48px;font-size:11px;color:var(–muted);letter-spacing:2px}
+/* BATTERY */
+.bat-visual{display:inline-flex;align-items:center;gap:8px;margin-top:6px}
+.bat-body{width:44px;height:20px;border:2px solid var(–muted);border-radius:3px;position:relative}
+.bat-body::after{content:’’;position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+width:4px;height:9px;background:var(–muted);border-radius:0 2px 2px 0}
+.bat-fill{position:absolute;left:2px;top:2px;bottom:2px;border-radius:2px;
+background:var(–accent3);transition:width .5s}
+.bat-fill.low{background:var(–accent2)}
+.bat-fill.mid{background:var(–warn)}
+
+/* VPN badges */
+.badge-warn{display:inline-block;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);
+color:var(–accent2);border-radius:3px;padding:3px 10px;font-size:12px}
+.badge-ok{display:inline-block;background:rgba(57,255,133,.1);border:1px solid rgba(57,255,133,.3);
+color:var(–accent3);border-radius:3px;padding:3px 10px;font-size:12px}
+
+/* stagger */
+.card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.08s}
+.card:nth-child(3){animation-delay:.12s}.card:nth-child(4){animation-delay:.16s}
+.card:nth-child(5){animation-delay:.20s}.card:nth-child(6){animation-delay:.24s}
+.card:nth-child(7){animation-delay:.28s}.card:nth-child(8){animation-delay:.32s}
+.card:nth-child(9){animation-delay:.36s}.card:nth-child(10){animation-delay:.40s}
+.card:nth-child(11){animation-delay:.44s}.card:nth-child(12){animation-delay:.48s}
+.card:nth-child(13){animation-delay:.52s}.card:nth-child(14){animation-delay:.56s}
+.card:nth-child(15){animation-delay:.60s}.card:nth-child(16){animation-delay:.64s}
+.card:nth-child(17){animation-delay:.68s}.card:nth-child(18){animation-delay:.72s}
+.card:nth-child(19){animation-delay:.76s}.card:nth-child(20){animation-delay:.80s}
+.card:nth-child(21){animation-delay:.84s}.card:nth-child(22){animation-delay:.88s}
+.card:nth-child(23){animation-delay:.92s}.card:nth-child(24){animation-delay:.96s}
+
+footer{text-align:center;margin-top:56px;font-size:11px;color:var(–muted);letter-spacing:2px;line-height:2}
+
 @media(max-width:600px){
 .clock-section{gap:24px;padding:20px 16px}
 .time-display{font-size:36px}
@@ -120,748 +166,695 @@ canvas#clock{width:140px!important;height:140px!important}
 <body>
 <div class="container">
 
- <header>
-   <div class="header-label">// Daten-Transparenz-Report</div>
-   <h1>Was weiß das<br><span>Internet über dich?</span></h1>
-   <p class="subtitle">Alle Daten, die dein Browser beim Besuch einer Webseite preisgibt — in Echtzeit.</p>
- </header>
+  <header>
+    <div class="header-label">// Daten-Transparenz-Report</div>
+    <h1>Was weiß das<br><span>Internet über dich?</span></h1>
+    <p class="subtitle">Alle Daten, die dein Browser beim Besuch einer Webseite preisgibt — in Echtzeit.</p>
+  </header>
 
- <div class="version-wrap">
-   <div class="version-badge">
-     <strong>v5.0</strong>
-     <span>·</span>
-     <span>14. März 2026</span>
-     <span>·</span>
-     <span id="v-browser-badge">Browser wird erkannt...</span>
-   </div>
- </div>
+  <div class="version-wrap">
+    <div class="version-badge">
+      <strong>v5.1</strong>
+      <span>·</span>
+      <span>25. März 2026</span>
+      <span>·</span>
+      <span id="vb">Browser wird erkannt...</span>
+    </div>
+  </div>
 
- <div class="clock-section">
-   <canvas id="clock" width="180" height="180"></canvas>
-   <div class="clock-digital">
-     <div class="time-display" id="timeDisplay">--:--:--</div>
-     <div class="date-display" id="dateDisplay">Synchronisiere...</div>
-     <div class="timezone-display" id="tzDisplay"></div>
-     <div class="sync-status syncing" id="syncStatus">⟳ Verbinde mit Zeitserver...</div>
-   </div>
- </div>
+  <div class="intro-box">
+    <strong>⚠ Was du hier siehst, sieht jede Webseite — ohne dass du etwas tust</strong>
+    <p>Jedes Mal wenn du eine Webseite öffnest, sendet dein Browser automatisch diese Informationen. Du musst nichts anklicken, nichts herunterladen, nichts erlauben. Diese Daten sind für jeden Webseitenbetreiber sichtbar — ohne dein Wissen. Apps auf deinem Smartphone können noch viel mehr: Kamera, Mikrofon, Kontakte, Standortverlauf. Überlege deshalb zweimal, bevor du eine unbekannte App installierst oder auf einen Link in WhatsApp, SMS oder E-Mail klickst.</p>
+  </div>
 
- <div class="grid" id="cardGrid"></div>
+  <!-- UHRZEIT -->
 
- <footer>
-   Alle Daten werden lokal im Browser ausgelesen · Keine Daten werden gespeichert oder weitergegeben
- </footer>
-</div>
+  <div class="clock-section">
+    <canvas id="clock" width="180" height="180"></canvas>
+    <div class="clock-digital">
+      <div class="time-display" id="timeDisplay">--:--:--</div>
+      <div class="date-display"  id="dateDisplay">Synchronisiere...</div>
+      <div class="timezone-display" id="tzDisplay"></div>
+      <div class="sync-status syncing" id="syncStatus">⟳ Verbinde mit Zeitserver...</div>
+    </div>
+  </div>
+
+  <!-- NETZWERK -->
+
+  <div class="section-title net"><span>// 01 · Netzwerk &amp; Standort</span></div>
+  <div class="grid" id="gNet"></div>
+
+  <!-- BROWSER -->
+
+  <div class="section-title bro"><span>// 02 · Browser &amp; Sprache</span></div>
+  <div class="grid" id="gBro"></div>
+
+  <!-- GERÄT -->
+
+  <div class="section-title dev"><span>// 03 · Gerät &amp; Betriebssystem</span></div>
+  <div class="grid" id="gDev"></div>
+
+  <!-- BILDSCHIRM & HARDWARE -->
+
+  <div class="section-title scr"><span>// 04 · Bildschirm &amp; Hardware</span></div>
+  <div class="grid" id="gScr"></div>
+
+  <!-- VERBINDUNG -->
+
+  <div class="section-title con"><span>// 05 · Verbindung &amp; Geschwindigkeit</span></div>
+  <div class="grid" id="gCon"></div>
+
+  <!-- FINGERPRINT -->
+
+  <div class="section-title fpr"><span>// 06 · Browser-Fingerprint</span></div>
+  <div class="grid" id="gFpr"></div>
+
+  <!-- PRIVATSPHÄRE -->
+
+  <div class="section-title prv"><span>// 07 · Privatsphäre-Check</span></div>
+  <div class="grid" id="gPrv"></div>
+
+  <!-- unsichtbares Canvas für Fingerprint -->
+
+<canvas id="fpCvs" width="300" height="50" style="display:none"></canvas>
+
+  <footer>
+    Alle Daten werden lokal in deinem Browser ausgelesen.<br>
+    Es werden keine Daten gespeichert, übertragen oder weitergegeben.<br>
+    <span style="opacity:.4">Diese Seite dient ausschließlich der Aufklärung und Sensibilisierung.</span>
+  </footer>
+</div><!-- /container -->
 
 <script>
-// ════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // HILFSFUNKTIONEN
-// ════════════════════════════════════════════════════════════
-const pad = n => String(n).padStart(2,'0');
+// ═══════════════════════════════════════════════════════
+const pad = n => String(n).padStart(2, '0');
 const DAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const MONS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
-function jsonp(url, cbParam, cbName, ms=8000){
- return new Promise((res,rej)=>{
-   let done=false;
-   const t=setTimeout(()=>{if(!done){done=true;cleanup();rej(new Error('timeout'))}},ms);
-   window[cbName]=d=>{if(!done){done=true;cleanup();res(d)}};
-   function cleanup(){clearTimeout(t);delete window[cbName];if(s.parentNode)s.parentNode.removeChild(s);}
-   const s=document.createElement('script');
-   s.onerror=()=>{if(!done){done=true;cleanup();rej(new Error('load error'))}};
-   s.src=url+(url.includes('?')?'&':'?')+cbParam+'='+cbName;
-   document.head.appendChild(s);
- });
+// JSONP – lädt per <script>-Tag, umgeht CORS auf file://
+function jsonp(url, cbParam, cbName, ms) {
+  ms = ms || 8000;
+  return new Promise(function(res, rej) {
+    var done = false;
+    var t = setTimeout(function() { if (!done) { done=true; cleanup(); rej(new Error('timeout')); } }, ms);
+    window[cbName] = function(d) { if (!done) { done=true; cleanup(); res(d); } };
+    function cleanup() { clearTimeout(t); delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); }
+    var s = document.createElement('script');
+    s.onerror = function() { if (!done) { done=true; cleanup(); rej(new Error('err')); } };
+    s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + cbParam + '=' + cbName;
+    document.head.appendChild(s);
+  });
 }
 
-async function fetchJSON(url, ms=6000){
- const ctrl=new AbortController();
- const t=setTimeout(()=>ctrl.abort(),ms);
- try{
-   const r=await fetch(url,{cache:'no-store',signal:ctrl.signal});
-   if(!r.ok) throw new Error('HTTP '+r.status);
-   return await r.json();
- }finally{clearTimeout(t);}
+// Fetch mit Timeout
+async function fj(url, ms) {
+  ms = ms || 6000;
+  var c = new AbortController();
+  var t = setTimeout(function() { c.abort(); }, ms);
+  try {
+    var r = await fetch(url, { cache: 'no-store', signal: c.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
 }
 
-// ════════════════════════════════════════════════════════════
-// UHRZEIT
-// ════════════════════════════════════════════════════════════
-const canvas = document.getElementById('clock');
-const ctx    = canvas.getContext('2d');
-const W = canvas.width, R = W/2;
+// DOM-Helfer
+function sv(id, html, isHtml) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('loading');
+  if (isHtml) el.innerHTML = html; else el.textContent = html;
+}
+function ss(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
 
-let timeOffset = 0;
-let isOnline   = false;
-let animRunning = false;
+// Karte erzeugen
+function mkCard(gridId, cls, label, title, vid, opts) {
+  opts = opts || {};
+  var g = document.getElementById(gridId);
+  var d = document.createElement('div');
+  d.className = 'card ' + cls + (opts.wide ? ' wide' : '');
+  var html = '<div class="card-label">' + label + '</div>'
+    + '<div class="card-title">' + title + '</div>'
+    + '<div class="card-value loading" id="' + vid + '">Wird geladen…</div>';
+  if (opts.sub)  html += '<div class="card-sub"  id="' + opts.sub  + '"></div>';
+  if (opts.sub2) html += '<div class="card-sub2" id="' + opts.sub2 + '"></div>';
+  if (opts.xtra) html += opts.xtra;
+  if (opts.warn) html += '<div class="card-warn" id="' + opts.warn + '"></div>';
+  d.innerHTML = html;
+  g.appendChild(d);
+}
 
-function nowAccurate(){ return new Date(Date.now() + timeOffset); }
+// ═══════════════════════════════════════════════════════
+// ANALOGE + DIGITALE UHR
+// Einzige Zeitquelle: nowAccurate() — immer!
+// ═══════════════════════════════════════════════════════
+var cvs = document.getElementById('clock');
+var ctx = cvs.getContext('2d');
+var W = cvs.width, R = W / 2;
+var timeOffset = 0;
+var isOnline = false;
+var animGo = false;
 
-const TIME_SOURCES = [
- { name:'worldtimeapi', fn: async ()=>{
-     const d = await fetchJSON('https://worldtimeapi.org/api/timezone/Etc/UTC');
-     return new Date(d.utc_datetime ?? d.datetime).getTime();
- }},
- { name:'timeapi.io', fn: async ()=>{
-     const d = await fetchJSON('https://timeapi.io/api/time/current/zone?timeZone=UTC');
-     if(!d.year) throw new Error('bad data');
-     return Date.UTC(d.year,d.month-1,d.day,d.hour,d.minute,d.seconds);
- }}
+function nowAccurate() { return new Date(Date.now() + timeOffset); }
+
+var TIME_SRC = [
+  { fn: async function() {
+      var d = await fj('https://worldtimeapi.org/api/timezone/Etc/UTC');
+      return new Date(d.utc_datetime || d.datetime).getTime();
+  }},
+  { fn: async function() {
+      var d = await fj('https://timeapi.io/api/time/current/zone?timeZone=UTC');
+      if (!d.year) throw new Error('bad');
+      return Date.UTC(d.year, d.month-1, d.day, d.hour, d.minute, d.seconds);
+  }}
 ];
 
-async function syncTime(){
- for(const src of TIME_SOURCES){
-   try{
-     const t0=Date.now();
-     const srvMs=await src.fn();
-     const rtt=(Date.now()-t0)/2;
-     timeOffset = srvMs + rtt - Date.now();
-     isOnline=true;
-     if(!animRunning){ animRunning=true; requestAnimationFrame(clockLoop); }
-     updateBadge();
-     return true;
-   }catch{}
- }
- isOnline=false;
- updateBadge();
- return false;
+async function syncTime() {
+  for (var i = 0; i < TIME_SRC.length; i++) {
+    try {
+      var t0 = Date.now();
+      var ms = await TIME_SRC[i].fn();
+      var rtt = (Date.now() - t0) / 2;
+      timeOffset = ms + rtt - Date.now();
+      isOnline = true;
+      if (!animGo) { animGo = true; requestAnimationFrame(clockLoop); }
+      updBadge();
+      return true;
+    } catch(e) {}
+  }
+  isOnline = false;
+  updBadge();
+  return false;
 }
 
-function updateBadge(){
- const el=document.getElementById('syncStatus');
- if(isOnline){
-   el.textContent='● ONLINE · Internet-synchronisiert';
-   el.className='sync-status online';
-   document.getElementById('timeDisplay').style.opacity='1';
- }else{
-   el.textContent='✕ OFFLINE · Uhr angehalten';
-   el.className='sync-status offline';
-   document.getElementById('timeDisplay').style.opacity='.35';
- }
+function updBadge() {
+  var el = document.getElementById('syncStatus');
+  if (isOnline) {
+    el.textContent = '● ONLINE · Internet-synchronisiert';
+    el.className = 'sync-status online';
+    document.getElementById('timeDisplay').style.opacity = '1';
+  } else {
+    el.textContent = '✕ OFFLINE · Uhr angehalten';
+    el.className = 'sync-status offline';
+    document.getElementById('timeDisplay').style.opacity = '.35';
+  }
 }
 
-function drawAnalog(t){
- const h=t.getHours()%12, m=t.getMinutes(), s=t.getSeconds(), ms=t.getMilliseconds();
- const c=isOnline?'0,200,255':'255,77,109';
- ctx.clearRect(0,0,W,W);
- ctx.beginPath(); ctx.arc(R,R,R-4,0,Math.PI*2);
- ctx.strokeStyle=`rgba(${c},.35)`; ctx.lineWidth=1.5; ctx.stroke();
- const g=ctx.createRadialGradient(R,R,0,R,R,R);
- g.addColorStop(0,`rgba(${c},.06)`); g.addColorStop(1,'transparent');
- ctx.fillStyle=g; ctx.beginPath(); ctx.arc(R,R,R,0,Math.PI*2); ctx.fill();
- for(let i=0;i<60;i++){
-   const a=(i/60)*Math.PI*2-Math.PI/2, maj=(i%5===0);
-   ctx.beginPath();
-   ctx.moveTo(R+Math.cos(a)*(R-(maj?14:8)), R+Math.sin(a)*(R-(maj?14:8)));
-   ctx.lineTo(R+Math.cos(a)*(R-4),          R+Math.sin(a)*(R-4));
-   ctx.strokeStyle=`rgba(${c},${maj?.8:.2})`; ctx.lineWidth=maj?2:1; ctx.stroke();
- }
- const hDeg = ((h + m/60 + s/3600) / 12) * 360;
- const mDeg = ((m + s/60) / 60) * 360;
- const sDeg = ((s + ms/1000) / 60) * 360;
- function drawHand(deg, length, width, color){
-   const rad = (deg - 90) * Math.PI / 180;
-   ctx.save(); ctx.translate(R,R); ctx.rotate(rad);
-   ctx.beginPath();
-   ctx.moveTo(-width/2, length*0.18);
-   ctx.lineTo(0, -length);
-   ctx.lineTo(width/2, length*0.18);
-   ctx.closePath();
-   ctx.fillStyle=color; ctx.fill();
-   ctx.restore();
- }
- drawHand(hDeg, R*0.50, 7, 'rgba(255,255,255,.95)');
- drawHand(mDeg, R*0.70, 5, `rgba(${c},.95)`);
- if(isOnline){
-   const sRad=(sDeg-90)*Math.PI/180;
-   ctx.save(); ctx.translate(R,R); ctx.rotate(sRad);
-   ctx.beginPath(); ctx.moveTo(0, R*0.2); ctx.lineTo(0, -(R*0.77));
-   ctx.strokeStyle='#ff4d6d'; ctx.lineWidth=1.5; ctx.stroke();
-   ctx.restore();
- }
- ctx.beginPath(); ctx.arc(R,R,5,0,Math.PI*2);
- ctx.fillStyle=isOnline?'#ff4d6d':'rgba(100,100,100,.5)'; ctx.fill();
- ctx.beginPath(); ctx.arc(R,R,2.5,0,Math.PI*2);
- ctx.fillStyle='#fff'; ctx.fill();
+function drawAnalog(t) {
+  var h = t.getHours() % 12, m = t.getMinutes(), s = t.getSeconds(), ms = t.getMilliseconds();
+  var c = isOnline ? '0,200,255' : '255,77,109';
+  ctx.clearRect(0, 0, W, W);
+  // Ring
+  ctx.beginPath(); ctx.arc(R, R, R-4, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba('+c+',.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+  // Glow
+  var g = ctx.createRadialGradient(R, R, 0, R, R, R);
+  g.addColorStop(0, 'rgba('+c+',.06)'); g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(R, R, R, 0, Math.PI*2); ctx.fill();
+  // Striche
+  for (var i = 0; i < 60; i++) {
+    var a = (i/60)*Math.PI*2 - Math.PI/2, maj = (i%5===0);
+    ctx.beginPath();
+    ctx.moveTo(R+Math.cos(a)*(R-(maj?14:8)), R+Math.sin(a)*(R-(maj?14:8)));
+    ctx.lineTo(R+Math.cos(a)*(R-4),          R+Math.sin(a)*(R-4));
+    ctx.strokeStyle = 'rgba('+c+','+(maj?.8:.2)+')'; ctx.lineWidth = maj?2:1; ctx.stroke();
+  }
+  // Zeiger-Funktion
+  function hand(deg, len, w, col) {
+    var a = (deg - 90) * Math.PI / 180;
+    ctx.save(); ctx.translate(R, R); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(-w/2, len*.18); ctx.lineTo(0, -len); ctx.lineTo(w/2, len*.18);
+    ctx.closePath(); ctx.fillStyle = col; ctx.fill(); ctx.restore();
+  }
+  hand(((h + m/60 + s/3600)/12)*360, R*.50, 7, 'rgba(255,255,255,.95)');
+  hand(((m + s/60)/60)*360,           R*.70, 5, 'rgba('+c+',.95)');
+  // Sekundenzeiger
+  if (isOnline) {
+    var sa = (((s + ms/1000)/60)*360 - 90) * Math.PI/180;
+    ctx.save(); ctx.translate(R, R); ctx.rotate(sa);
+    ctx.beginPath(); ctx.moveTo(0, R*.2); ctx.lineTo(0, -(R*.77));
+    ctx.strokeStyle = '#ff4d6d'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(R,R,5,0,Math.PI*2); ctx.fillStyle=isOnline?'#ff4d6d':'rgba(100,100,100,.5)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(R,R,2.5,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
 }
 
-function updateDigital(t){
- document.getElementById('timeDisplay').textContent =
-   `${pad(t.getHours())}:${pad(t.getMinutes())}:${pad(t.getSeconds())}`;
- document.getElementById('dateDisplay').textContent =
-   `${DAYS[t.getDay()]}, ${t.getDate()}. ${MONS[t.getMonth()]} ${t.getFullYear()}`;
- document.getElementById('tzDisplay').textContent =
-   Intl.DateTimeFormat().resolvedOptions().timeZone;
+var lastSec = -1;
+function clockLoop() {
+  var t = nowAccurate();
+  drawAnalog(t);
+  if (t.getSeconds() !== lastSec) {
+    lastSec = t.getSeconds();
+    document.getElementById('timeDisplay').textContent = pad(t.getHours())+':'+pad(t.getMinutes())+':'+pad(t.getSeconds());
+    document.getElementById('dateDisplay').textContent = DAYS[t.getDay()]+', '+t.getDate()+'. '+MONS[t.getMonth()]+' '+t.getFullYear();
+    document.getElementById('tzDisplay').textContent   = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  if (isOnline) requestAnimationFrame(clockLoop);
+  else setTimeout(function() { requestAnimationFrame(clockLoop); }, 500);
 }
 
-let lastSecond = -1;
-function clockLoop(){
- const t = nowAccurate();
- drawAnalog(t);
- if(t.getSeconds() !== lastSecond){
-   lastSecond = t.getSeconds();
-   updateDigital(t);
- }
- if(isOnline) requestAnimationFrame(clockLoop);
- else {
-   drawAnalog(t); updateDigital(t);
-   setTimeout(()=>requestAnimationFrame(clockLoop), 500);
- }
-}
+// Sofort erste Zeichnung (grau)
+drawAnalog(new Date());
 
-drawAnalog(new Date()); updateDigital(new Date());
-(function syncLoop(){
- syncTime().finally(()=>setTimeout(syncLoop, 5000));
-})();
-window.addEventListener('offline',()=>{isOnline=false;updateBadge();});
-window.addEventListener('online', ()=>syncTime());
+// Sync-Schleife
+(function sl() { syncTime().finally(function() { setTimeout(sl, 5000); }); })();
+window.addEventListener('offline', function() { isOnline=false; updBadge(); });
+window.addEventListener('online',  function() { syncTime(); });
 
-// ════════════════════════════════════════════════════════════
-// KARTEN-BUILDER
-// ════════════════════════════════════════════════════════════
-const grid=document.getElementById('cardGrid');
+// ═══════════════════════════════════════════════════════
+// KARTEN ANLEGEN
+// ═══════════════════════════════════════════════════════
 
-function addCard(cat,label,title,valId,subId,sub2Id,wide){
- const d=document.createElement('div');
- d.className=`card cat-${cat}${wide?' wide':''}`;
- d.innerHTML=
-   `<div class="card-label">${label}</div>`+
-   `<div class="card-title">${title}</div>`+
-   `<div class="card-value loading" id="${valId}">Wird geladen…</div>`+
-   (subId  ?`<div class="card-sub"  id="${subId}"></div>`  :'')+
-   (sub2Id ?`<div class="card-sub2" id="${sub2Id}"></div>` :'');
- grid.appendChild(d);
-}
+// NETZWERK
+mkCard('gNet','net','// Netzwerk','Deine IP-Adresse','vIp',  {wide:true, sub:'vIpSub', warn:'vIpWarn'});
+mkCard('gNet','net','// Netzwerk','Standort (via IP)','vLoc', {sub:'vLocSub', warn:'vLocWarn'});
+mkCard('gNet','net','// Netzwerk','Internet-Anbieter','vIsp', {sub:'vIspSub', warn:'vIspWarn'});
 
-function setVal(id,html,isHtml){
- const el=document.getElementById(id); if(!el)return;
- el.classList.remove('loading');
- if(isHtml)el.innerHTML=html; else el.textContent=html;
-}
-function setSub(id,txt){const el=document.getElementById(id);if(el)el.textContent=txt;}
+// BROWSER
+mkCard('gBro','bro','// Browser','Browser & Version','vBrowser', {sub:'vEngine', warn:'vBrowserWarn'});
+mkCard('gBro','bro','// Browser','Sprache(n)','vLang', {warn:'vLangWarn'});
 
-// ════════════════════════════════════════════════════════════
+// GERÄT
+mkCard('gDev','dev','// Betriebssystem','Betriebssystem','vOs', {sub:'vOsSub', sub2:'vOsSub2', warn:'vOsWarn'});
+mkCard('gDev','dev','// Gerät','Gerätetyp','vDevice', {warn:'vDevWarn'});
+
+// BILDSCHIRM & HARDWARE
+mkCard('gScr','scr','// Bildschirm','Auflösung (physisch)','vRes', {sub:'vResSub', warn:'vResWarn'});
+mkCard('gScr','scr','// Bildschirm','Farb-Tiefe','vColor');
+mkCard('gScr','dev','// Hardware','CPU-Kerne','vCpu', {warn:'vCpuWarn'});
+mkCard('gScr','dev','// Hardware','Arbeitsspeicher (RAM)','vRam', {sub:'vRamSub'});
+mkCard('gScr','dev','// Hardware','GPU / Grafikkarte','vGpu', {sub:'vGpuSub', warn:'vGpuWarn'});
+mkCard('gScr','dev','// Hardware','Batterie & Ladezustand','vBat',
+  {sub:'vBatSub', warn:'vBatWarn', xtra:'<div id="vBatVis" style="margin-top:8px"></div>'});
+
+// VERBINDUNG
+mkCard('gCon','con','// Verbindung','Verbindungstyp','vConnType', {warn:'vConnTypeWarn'});
+mkCard('gCon','con','// Verbindung','Verbindungsgeschwindigkeit','vConnSpeed', {sub:'vConnSpeedSub', warn:'vConnSpeedWarn'});
+mkCard('gCon','net','// Netzwerk','VPN / Proxy erkannt?','vVpn', {sub:'vVpnSub', warn:'vVpnWarn'});
+
+// FINGERPRINT
+mkCard('gFpr','fpr','// Fingerprint','Einzigartigkeit deines Browsers','vFpScore',
+  {wide:true, sub:'vFpSub', warn:'vFpWarn',
+   xtra:'<div class="fp-wrap" id="fpWrap" style="display:none">'
+       +'<div class="fp-num" id="fpNum">–</div>'
+       +'<div class="fp-right"><div class="fp-label" id="fpLabel"></div>'
+       +'<div class="fp-bar"><div class="fp-bar-fill" id="fpFill"></div></div></div></div>'});
+mkCard('gFpr','fpr','// Fingerprint','WebGL / GPU-Renderer','vWebgl', {sub:'vWebglVendor', warn:'vWebglWarn'});
+mkCard('gFpr','fpr','// Fingerprint','Canvas-Fingerprint','vCanvasFp', {sub:'vCanvasFpSub', warn:'vCanvasWarn'});
+mkCard('gFpr','fpr','// Fingerprint','Adblocker erkannt?','vAdblocker', {warn:'vAdblockerWarn'});
+
+// PRIVATSPHÄRE
+mkCard('gPrv','prv','// Privatsphäre','Do Not Track (DNT)','vDnt', {warn:'vDntWarn'});
+mkCard('gPrv','prv','// Privatsphäre','Cookies','vCookies', {warn:'vCookiesWarn'});
+mkCard('gPrv','prv','// Privatsphäre','Touchscreen','vTouch');
+mkCard('gPrv','prv','// Privatsphäre','Wiedererkennungs-Test','vStorage', {sub:'vStorageSub', warn:'vStorageWarn'});
+
+// ═══════════════════════════════════════════════════════
 // BROWSER-ERKENNUNG
-// ════════════════════════════════════════════════════════════
-async function detectBrowser(){
- const ua  = navigator.userAgent;
- const uad = navigator.userAgentData;
-
- if(navigator.brave){
-   try{ await navigator.brave.isBrave(); }catch{}
-   const isBrave = await navigator.brave.isBrave().catch(()=>false);
-   if(isBrave){
-     const ver=(ua.match(/Chrome\/([\d.]+)/)||[])[1]||'';
-     return { name:'Brave Browser', ver, engine:'Blink', note:'Datenschutz-fokussierter Chromium-Fork', id:'brave' };
-   }
- }
- if(/Vivaldi\/([\d.]+)/.test(ua)){
-   const ver=(ua.match(/Vivaldi\/([\d.]+)/)||[])[1]||'';
-   return { name:'Vivaldi', ver, engine:'Blink', note:'Chromium-basiert · Anpassbarer Browser', id:'vivaldi' };
- }
- if(/OPR\/([\d.]+)/.test(ua)){
-   const ver=(ua.match(/OPR\/([\d.]+)/)||[])[1]||'';
-   return { name:/Opera GX/.test(ua)?'Opera GX':'Opera', ver, engine:'Blink', note:'Chromium-basiert', id:'opera' };
- }
- if(/Edg\/([\d.]+)/.test(ua)){
-   const ver=(ua.match(/Edg\/([\d.]+)/)||[])[1]||'';
-   return { name:'Microsoft Edge', ver, engine:'Blink', note:'Chromium-basiert', id:'edge' };
- }
- if(/Firefox\/([\d.]+)/.test(ua)){
-   const ver=(ua.match(/Firefox\/([\d.]+)/)||[])[1]||'';
-   return { name:'Mozilla Firefox'+(/ESR/.test(ua)?' ESR':''), ver, engine:'Gecko', note:'', id:'firefox' };
- }
- if(/Safari\//.test(ua) && !/Chrome/.test(ua)){
-   const ver=(ua.match(/Version\/([\d.]+)/)||[])[1]||'';
-   return { name:'Apple Safari', ver, engine:'WebKit', note:'', id:'safari' };
- }
- if(/Chrome\/([\d.]+)/.test(ua)){
-   const ver=(ua.match(/Chrome\/([\d.]+)/)||[])[1]||'';
-   if(uad?.brands){
-     const brands=uad.brands.map(b=>b.brand);
-     if(brands.some(b=>/Samsung/.test(b))) return { name:'Samsung Internet', ver, engine:'Blink', note:'', id:'samsung' };
-   }
-   return { name:'Google Chrome', ver, engine:'Blink', note:'', id:'chrome' };
- }
- return { name:'Unbekannter Browser', ver:'', engine:'', note:navigator.userAgent.slice(0,60), id:'unknown' };
+// ═══════════════════════════════════════════════════════
+async function detectBrowser() {
+  var ua = navigator.userAgent;
+  // Brave
+  if (navigator.brave) {
+    try {
+      var isBrave = await navigator.brave.isBrave();
+      if (isBrave) {
+        var ver = (ua.match(/Chrome\/([\d.]+)/) || [])[1] || '';
+        return { name:'Brave Browser', ver:ver, engine:'Blink', note:'Datenschutz-fokussierter Chromium-Fork' };
+      }
+    } catch(e) {}
+  }
+  // Vivaldi
+  var vivM = ua.match(/Vivaldi\/([\d.]+)/);
+  if (vivM) return { name:'Vivaldi', ver:vivM[1], engine:'Blink', note:'Chromium-basiert · anpassbarer Browser' };
+  // Opera
+  var oprM = ua.match(/OPR\/([\d.]+)/);
+  if (oprM) return { name:/Opera GX/.test(ua)?'Opera GX':'Opera', ver:oprM[1], engine:'Blink', note:'Chromium-basiert' };
+  // Edge
+  var edgM = ua.match(/Edg\/([\d.]+)/);
+  if (edgM) return { name:'Microsoft Edge', ver:edgM[1], engine:'Blink', note:'Chromium-basiert' };
+  // Firefox
+  var ffM = ua.match(/Firefox\/([\d.]+)/);
+  if (ffM) return { name:'Mozilla Firefox', ver:ffM[1], engine:'Gecko', note:'' };
+  // Safari
+  if (/Safari\//.test(ua) && !/Chrome/.test(ua)) {
+    var safM = ua.match(/Version\/([\d.]+)/);
+    return { name:'Apple Safari', ver:safM?safM[1]:'', engine:'WebKit', note:'' };
+  }
+  // Chrome
+  var chrM = ua.match(/Chrome\/([\d.]+)/);
+  if (chrM) return { name:'Google Chrome', ver:chrM[1], engine:'Blink', note:'' };
+  return { name:'Unbekannt', ver:'', engine:'', note:'' };
 }
 
-// ════════════════════════════════════════════════════════════
-// OS-ERKENNUNG
-// ════════════════════════════════════════════════════════════
-function winReleaseName(major){
- const map = {
-   19:'26H1 (2025)', 18:'24H2', 17:'24H1', 16:'23H2', 15:'23H1 / 22H2',
-   13:'22H2', 10:'22H2 (Win10)', 9:'21H2 (Win10)', 8:'21H1 (Win10)',
-   7:'20H2 (Win10)', 6:'2004 (Win10)',
- };
- return map[major] || null;
+// Windows Release-Mapping
+function winRelease(major) {
+  var m = {20:'26H1',19:'26H1',18:'24H2',17:'24H1',16:'23H2',15:'22H2 / 23H1',13:'22H2'};
+  return m[major] || null;
 }
 
-async function detectOS(){
- if(navigator.userAgentData){
-   try{
-     const hi=await navigator.userAgentData.getHighEntropyValues(
-       ['platform','platformVersion','architecture','bitness']
-     );
-     const plat=(hi.platform||'').toLowerCase();
-     if(plat.includes('windows')){
-       const ver    = hi.platformVersion || '0.0.0';
-       const major  = parseInt(ver.split('.')[0], 10);
-       const arch   = hi.architecture ? ` · ${hi.architecture}${hi.bitness?'-'+hi.bitness:''}` : '';
-       const isWin11 = major >= 13;
-       const release = winReleaseName(major);
-       const relStr  = release ? ` (${release})` : '';
-       return {
-         name:  isWin11 ? `Windows 11${relStr}` : `Windows 10${relStr}`,
-         sub:   `Plattform-Version: ${ver}${arch}`,
-         sub2:  isWin11 ? 'Build-Mapping über Edge-API · exakte Build-Nr. nur via PowerShell' : ''
-       };
-     }
-     if(plat.includes('mac')) return { name:`macOS`, sub:`Version: ${hi.platformVersion||''}`, sub2:'' };
-     if(hi.platform) return { name:hi.platform, sub:'', sub2:'' };
-   }catch{}
- }
- const ua = navigator.userAgent;
- if(/Windows NT 10\.0/.test(ua)) return { name:'Windows 10 / 11', sub:'Firefox gibt keine genaue Version preis (Datenschutz)', sub2:'In Edge/Chrome/Brave wäre die genaue Version erkennbar' };
- if(/Windows NT 6\.3/.test(ua)) return {name:'Windows 8.1',sub:'',sub2:''};
- if(/Windows NT 6\.2/.test(ua)) return {name:'Windows 8',sub:'',sub2:''};
- if(/Windows NT 6\.1/.test(ua)) return {name:'Windows 7',sub:'',sub2:''};
- const and=ua.match(/Android ([\d.]+)/);
- if(and) return {name:'Android '+and[1],sub:'',sub2:''};
- if(/iPhone|iPad/.test(ua)){
-   const v=ua.match(/OS ([\d_]+)/);
-   return {name:'iOS '+(v?v[1].replace(/_/g,'.'):''),sub:'',sub2:''};
- }
- const mac=ua.match(/Mac OS X ([\d_]+)/);
- if(mac) return {name:'macOS '+mac[1].replace(/_/g,'.'),sub:'',sub2:''};
- if(/CrOS/.test(ua)) return {name:'ChromeOS',sub:'',sub2:''};
- if(/Linux/.test(ua)) return {name:'Linux',sub:'',sub2:''};
- return {name:navigator.platform||'Unbekannt',sub:'',sub2:''};
+async function detectOS() {
+  if (navigator.userAgentData) {
+    try {
+      var hi = await navigator.userAgentData.getHighEntropyValues(['platform','platformVersion','architecture','bitness']);
+      var plat = (hi.platform || '').toLowerCase();
+      if (plat.indexOf('windows') >= 0) {
+        var major = parseInt((hi.platformVersion || '0').split('.')[0], 10);
+        var rel = winRelease(major);
+        var arch = hi.architecture ? ' · ' + hi.architecture + (hi.bitness?'-'+hi.bitness:'') : '';
+        var isW11 = major >= 13;
+        return {
+          name: isW11 ? 'Windows 11' + (rel?' ('+rel+')':'') : 'Windows 10' + (rel?' ('+rel+')':''),
+          sub:  'Plattform-Version: ' + hi.platformVersion + arch,
+          sub2: ''
+        };
+      }
+      if (plat.indexOf('mac') >= 0) return { name:'macOS', sub:'Version: '+hi.platformVersion, sub2:'' };
+      if (hi.platform) return { name:hi.platform, sub:'', sub2:'' };
+    } catch(e) {}
+  }
+  var ua = navigator.userAgent;
+  if (/Windows NT 10\.0/.test(ua)) return { name:'Windows 10 / 11', sub:'Firefox versteckt die genaue Version (Datenschutz)', sub2:'In Edge/Chrome/Brave wäre Windows 11 exakt erkennbar' };
+  if (/Windows NT 6\.3/.test(ua)) return { name:'Windows 8.1', sub:'', sub2:'' };
+  var andM = ua.match(/Android ([\d.]+)/);
+  if (andM) return { name:'Android '+andM[1], sub:'', sub2:'' };
+  if (/iPhone|iPad/.test(ua)) { var iosV = ua.match(/OS ([\d_]+)/); return { name:'iOS '+(iosV?iosV[1].replace(/_/g,'.'):''), sub:'', sub2:'' }; }
+  var macM = ua.match(/Mac OS X ([\d_]+)/);
+  if (macM) return { name:'macOS '+macM[1].replace(/_/g,'.'), sub:'', sub2:'' };
+  if (/Linux/.test(ua)) return { name:'Linux', sub:'', sub2:'' };
+  return { name:navigator.platform||'Unbekannt', sub:'', sub2:'' };
 }
 
-// ════════════════════════════════════════════════════════════
-// GPU via WebGL
-// ════════════════════════════════════════════════════════════
-function cleanGPUString(raw){
- // ANGLE-Wrapper entfernen: "ANGLE (Intel, Intel(R) UHD Graphics 600 (...) Direct3D11 ...)" → "Intel UHD Graphics 600"
- // Format 1: ANGLE (Vendor, Model (hex) Backend)
- let m = raw.match(/ANGLE\s*\([^,]+,\s*(.+?)\s*(?:\(0x[0-9a-fA-F]+\).*)?(?:Direct3D|Metal|Vulkan|OpenGL)[^\)]*\)/i);
- if(m) return m[1].trim();
- // Format 2: ANGLE (Vendor, Model, Backend)
- m = raw.match(/ANGLE\s*\([^,]+,\s*(.+?),\s*(?:Direct3D|Metal|Vulkan|OpenGL)/i);
- if(m) return m[1].trim();
- // Format 3: ANGLE (Model) ohne weiteres
- m = raw.match(/ANGLE\s*\((.+)\)/);
- if(m) return m[1].trim();
- return raw;
-}
-
-function detectGPU(){
- try{
-   const c=document.createElement('canvas');
-   const gl=c.getContext('webgl')||c.getContext('experimental-webgl');
-   if(!gl) return { renderer:'WebGL nicht verfügbar', vendor:'', raw:'', note:'' };
-   const ext=gl.getExtension('WEBGL_debug_renderer_info');
-   if(ext){
-     const raw      = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)||'';
-     const vendor   = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)||'';
-     const renderer = cleanGPUString(raw);
-     return { renderer, vendor, raw, note:'Echte GPU-Bezeichnung (Fingerprinting-Vektor!)' };
-   }
-   // Fallback: maskierter Wert
-   const raw      = gl.getParameter(gl.RENDERER)||'';
-   const vendor   = gl.getParameter(gl.VENDOR)||'';
-   const renderer = cleanGPUString(raw);
-   return { renderer, vendor, raw, note:'Browser maskiert den genauen GPU-Namen (Datenschutz)' };
- }catch{
-   return { renderer:'Fehler beim Auslesen', vendor:'', raw:'', note:'' };
- }
-}
-
-// ════════════════════════════════════════════════════════════
-// VERBINDUNGSTYP (Network Information API)
-// ════════════════════════════════════════════════════════════
-function detectConnection(){
- const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
- if(!conn) return null;
- // Icon + Kurzname getrennt von Details
- const typeMap = {
-   'wifi':    { icon:'📶', label:'WLAN (Wi-Fi)' },
-   'ethernet':{ icon:'🔌', label:'LAN (Ethernet)' },
-   '4g':      { icon:'📡', label:'4G / LTE' },
-   '3g':      { icon:'📡', label:'3G' },
-   '2g':      { icon:'📡', label:'2G' },
-   'slow-2g': { icon:'📡', label:'Edge / GPRS' },
-   'none':    { icon:'✗',  label:'Keine Verbindung' },
-   'other':   { icon:'🌐', label:'Sonstige' },
- };
- const mapped  = typeMap[conn.type];
- const icon    = mapped ? mapped.icon  : '🌐';
- const label   = mapped ? mapped.label : (conn.type || '–');
- // Detailzeile
- const etype   = conn.effectiveType ? `Effektiv: ${conn.effectiveType.toUpperCase()}` : '';
- const dl      = conn.downlink      ? `↓ ~${conn.downlink} Mbit/s` : '';
- const rtt     = conn.rtt           ? `Latenz: ~${conn.rtt} ms` : '';
- const parts   = [etype,dl,rtt].filter(Boolean).join('  ·  ');
- const saver   = conn.saveData      ? '⚠ Datensparmodus aktiv' : '';
- return { icon, label, sub: parts, sub2: saver };
-}
-
-// ════════════════════════════════════════════════════════════
-// AKKU (Battery API)
-// ════════════════════════════════════════════════════════════
-async function detectBattery(){
- if(!navigator.getBattery) return { blocked: true, reason: 'api_missing' };
- try{
-   const b = await navigator.getBattery();
-   return { blocked: false, battery: b };
- }catch(e){
-   // Brave wirft SecurityError oder ähnliches
-   return { blocked: true, reason: e.name || 'blocked' };
- }
-}
-
-// Gerätetyp: nutzt Akku-Ergebnis für Laptop/Desktop-Unterscheidung
-let _batteryResult = null; // wird nach detectBattery() gesetzt
-
-function updateDeviceType(){
- const ua  = navigator.userAgent;
- const mob = /Mobi|Android|iPhone/.test(ua);
- const tab = /iPad|Android/.test(ua) && !/Mobile/.test(ua);
- if(mob){ setVal('v-device', tab ? '📱 Tablet' : '📱 Smartphone'); return; }
-
- // Desktop vs. Laptop: Akku-API ist der zuverlässigste Hinweis
- if(_batteryResult){
-   if(!_batteryResult.blocked && _batteryResult.battery){
-     // Hat Akku → Laptop
-     const b = _batteryResult.battery;
-     const pct = Math.round(b.level * 100);
-     setVal('v-device',`💻 Laptop`);
-     setSub('v-device-sub', `Akku erkannt (${pct}%) — kein Desktop`);
-   } else {
-     // Kein Akku / blockiert → wahrscheinlich Desktop, aber unsicher
-     const hint = _batteryResult.reason === 'api_missing'
-       ? 'Kein Akku erkannt — wahrscheinlich Desktop'
-       : 'Akku-API blockiert (Datenschutz) — Desktop/Laptop unklar';
-     setVal('v-device','🖥 Desktop / Laptop');
-     setSub('v-device-sub', hint);
-   }
- } else {
-   setVal('v-device','🖥 Desktop / Laptop');
- }
-}
-
-function renderBattery(result){
- if(result.blocked){
-   // Brave blockiert getBattery() absichtlich
-   const msg = result.reason === 'api_missing'
-     ? 'Battery API nicht vorhanden'
-     : '🛡 Brave blockiert die Battery API (Fingerprinting-Schutz)';
-   setVal('v-battery', result.reason === 'api_missing' ? 'Nicht verfügbar' : '🛡 Blockiert');
-   setSub('v-battery-sub', msg);
-   return;
- }
- const b = result.battery;
- if(!b){ setVal('v-battery','Nicht verfügbar'); setSub('v-battery-sub','API nicht unterstützt'); return; }
- const pct  = Math.round(b.level * 100);
- const color = pct > 60 ? '#39ff85' : pct > 20 ? '#fbbf24' : '#ff4d6d';
- const icon  = b.charging ? '⚡ Lädt' : (pct <= 20 ? '🪫 Niedrig' : '🔋');
- const timeStr = b.charging
-   ? (b.chargingTime && b.chargingTime !== Infinity ? `Voll in ~${Math.round(b.chargingTime/60)} min` : 'Lädt …')
-   : (b.dischargingTime && b.dischargingTime !== Infinity ? `Leer in ~${Math.round(b.dischargingTime/60)} min` : '');
- const html =
-   `<div style="font-size:15px;color:#fff;margin-bottom:6px">${icon} · ${pct}%</div>`+
-   `<div class="battery-wrap">`+
-     `<div class="battery-bar-outer"><div class="battery-bar-inner" style="width:${pct}%;background:${color}"></div></div>`+
-     `<div class="battery-pct" style="color:${color}">${pct}%</div>`+
-   `</div>`;
- setVal('v-battery', html, true);
- setSub('v-battery-sub', timeStr || (b.charging ? '⚡ Wird geladen' : 'Entlädt sich'));
- const update = () => renderBattery(result);
- b.addEventListener('chargingchange',      update);
- b.addEventListener('levelchange',         update);
- b.addEventListener('chargingtimechange',  update);
- b.addEventListener('dischargingtimechange',update);
-}
-
-// ════════════════════════════════════════════════════════════
-// FINGERPRINTING-WARNUNGEN (neue Karten, wide)
-// ════════════════════════════════════════════════════════════
-
-// Wird nach detectBrowser() aufgerufen — bekommt browserId übergeben
-function buildFingerprintWarnings(browserId){
- const realCores = navigator.hardwareConcurrency;
-
- // ── Warnung 1: CPU-Kerne verfälscht? ──────────────────────
- // Brave und Vivaldi limitieren auf 2 — Firefox gibt den echten Wert
- const browsersFakingCPU = ['brave','vivaldi'];
- if(browsersFakingCPU.includes(browserId)){
-   const d=document.createElement('div');
-   d.className='card cat-warn wide';
-   d.style.animationDelay='1.0s';
-   d.innerHTML=
-     `<div class="card-label">// Fingerprint-Schutz erkannt</div>`+
-     `<div class="card-title">⚠ CPU-Kerne absichtlich verfälscht</div>`+
-     `<div class="card-value">`+
-       `Dieser Browser meldet: ${realCores} logische Kerne`+
-     `</div>`+
-     `<div class="card-sub">`+
-       `${browserId==='brave'?'Brave':'Vivaldi'} reduziert navigator.hardwareConcurrency absichtlich, `+
-       `um Browser-Fingerprinting zu erschweren. Der echte Wert deines Systems kann höher sein.`+
-     `</div>`+
-     `<div class="card-sub2" style="margin-top:4px;color:#7a4050">`+
-       `Firefox und Chrome geben den tatsächlichen Wert preis — dieser Browser schützt dich.`+
-     `</div>`;
-   grid.appendChild(d);
- }
-
- // ── Warnung 2: Browser meldet sich als Google Chrome (Vivaldi-Problem) ──
- if(browserId === 'vivaldi'){
-   const ua = navigator.userAgent;
-   const chromeVer = (ua.match(/Chrome\/([\d.]+)/)||[])[1]||'';
-   const d=document.createElement('div');
-   d.className='card cat-warn wide';
-   d.style.animationDelay='1.05s';
-   d.innerHTML=
-     `<div class="card-label">// Fingerprint-Schutz erkannt</div>`+
-     `<div class="card-title">⚠ Browser tarnt sich als Google Chrome</div>`+
-     `<div class="card-value">`+
-       `UA-String enthält: Chrome/${chromeVer}`+
-     `</div>`+
-     `<div class="card-sub">`+
-       `Vivaldi schreibt "Chrome" in den User-Agent-String, um maximale Website-Kompatibilität zu gewährleisten. `+
-       `Einfache UA-basierte Erkennung identifiziert Vivaldi deshalb fälschlicherweise als Google Chrome.`+
-     `</div>`+
-     `<div class="card-sub2" style="margin-top:4px;color:#7a4050">`+
-       `Korrekte Erkennung ist nur durch Prüfung von window.vivaldi oder dem Vivaldi/-Token im UA möglich.`+
-     `</div>`;
-   grid.appendChild(d);
- }
-
- // ── Warnung 3: WebGL gibt echte GPU preis ──────────────────
- const gpu = detectGPU();
- if(gpu.renderer && !gpu.renderer.includes('WebGL nicht') && !gpu.renderer.includes('Fehler')){
-   // Prüfen ob der Wert echte Hardware verrät (nicht "Google Inc." o.ä.)
-   const looksReal = /nvidia|amd|radeon|intel|apple|mali|adreno|geforce|quadro/i.test(gpu.renderer);
-   if(looksReal){
-     const d=document.createElement('div');
-     d.className='card cat-warn wide';
-     d.style.animationDelay='1.10s';
-     d.innerHTML=
-       `<div class="card-label">// Fingerprint-Warnung</div>`+
-       `<div class="card-title">⚠ GPU-Modell via WebGL sichtbar</div>`+
-       `<div class="card-value">${gpu.renderer}</div>`+
-       `<div class="card-sub">`+
-         `${gpu.vendor ? gpu.vendor+' · ' : ''}`+
-         `Die WEBGL_debug_renderer_info-Extension gibt die exakte GPU-Bezeichnung preis. `+
-         `Diese Information ist ein starker Fingerprinting-Vektor.`+
-       `</div>`+
-       `<div class="card-sub2" style="margin-top:4px;color:#7a4050">`+
-         `Brave blockiert diesen Wert standardmäßig. Firefox randomisiert ihn leicht.`+
-       `</div>`;
-     grid.appendChild(d);
-   }
- }
-
- // ── Warnung 4: Brave blockiert Battery API ──────────────────
- if(browserId === 'brave'){
-   const d=document.createElement('div');
-   d.className='card cat-warn wide';
-   d.style.animationDelay='1.15s';
-   d.innerHTML=
-     `<div class="card-label">// Fingerprint-Schutz erkannt</div>`+
-     `<div class="card-title">🛡 Battery API blockiert</div>`+
-     `<div class="card-value">Brave verweigert den Zugriff auf navigator.getBattery()</div>`+
-     `<div class="card-sub">`+
-       `Die Battery Status API kann für Fingerprinting missbraucht werden — Ladestand und `+
-       `Restlaufzeit sind für jeden Nutzer einzigartig. Brave blockiert sie daher vollständig.`+
-     `</div>`+
-     `<div class="card-sub2" style="margin-top:4px;color:#7a4050">`+
-       `Chrome, Edge, Firefox und Vivaldi geben diese Daten preis.`+
-     `</div>`;
-   grid.appendChild(d);
- }
-}
-
-// ════════════════════════════════════════════════════════════
-// KARTEN ANLEGEN (thematisch sortiert)
-// ════════════════════════════════════════════════════════════
-
-// Netzwerk
-addCard('network','// Netzwerk',       'Deine IP-Adresse',        'v-ip',      'v-ip-sub',   null,         true);
-addCard('network','// Netzwerk',       'Standort (via IP)',        'v-loc',     'v-loc-sub');
-addCard('network','// Netzwerk',       'Internet-Anbieter (ISP)', 'v-isp',     'v-isp-sub');
-addCard('network','// Netzwerk',       'Verbindungstyp',          'v-conn',    'v-conn-sub', 'v-conn-sub2');
+// ═══════════════════════════════════════════════════════
+// WERTE FÜLLEN — lokale Daten sofort
+// ═══════════════════════════════════════════════════════
 
 // Browser
-addCard('browser','// Browser',        'Browser & Version',       'v-browser', 'v-engine');
-addCard('browser','// Browser',        'Sprache(n)',              'v-lang');
-
-// OS
-addCard('device', '// Betriebssystem', 'Betriebssystem',          'v-os',      'v-os-sub',  'v-os-sub2');
-addCard('device', '// Gerät',          'Gerätetyp',               'v-device',  'v-device-sub');
-
-// Bildschirm
-addCard('screen', '// Bildschirm',     'Auflösung (physisch)',    'v-res',     'v-res-sub');
-addCard('screen', '// Bildschirm',     'Farb-Tiefe',              'v-color');
-
-// Hardware
-addCard('device', '// Hardware',       'CPU-Kerne',               'v-cpu',     'v-cpu-sub');
-addCard('device', '// Hardware',       'Arbeitsspeicher (RAM)',   'v-ram',     'v-ram-sub');
-addCard('device', '// Hardware',       'Grafikkarte (GPU)',        'v-gpu',     'v-gpu-sub', 'v-gpu-sub2');
-addCard('device', '// Hardware',       'Akku / Batterie',         'v-battery', 'v-battery-sub');
-
-// Privatsphäre
-addCard('privacy','// Privatsphäre',   'Do Not Track',            'v-dnt');
-addCard('privacy','// Privatsphäre',   'Cookies',                 'v-cookies');
-addCard('privacy','// Privatsphäre',   'Touchscreen',             'v-touch');
-
-// ════════════════════════════════════════════════════════════
-// WERTE BEFÜLLEN
-// ════════════════════════════════════════════════════════════
-
-// Browser
-detectBrowser().then(b=>{
- setVal('v-browser',`${b.name} ${b.ver}`);
- let engine = `Rendering-Engine: ${b.engine}`;
- if(b.note) engine += `  ·  ${b.note}`;
- setSub('v-engine', engine);
- document.getElementById('v-browser-badge').textContent = `${b.name} ${b.ver}`;
-
- // Fingerprint-Warnungen NACH Browser-Erkennung
- buildFingerprintWarnings(b.id);
+detectBrowser().then(function(b) {
+  sv('vBrowser', b.name + ' ' + b.ver);
+  ss('vEngine', 'Rendering-Engine: ' + b.engine + (b.note?' · '+b.note:''));
+  ss('vBrowserWarn', 'Webseiten sehen welchen Browser du nutzt. Angriffe zielen gezielt auf veraltete Browser-Versionen. Halte deinen Browser stets aktuell!');
+  document.getElementById('vb').textContent = b.name + ' ' + b.ver;
 });
 
 // OS
-detectOS().then(o=>{
- setVal('v-os', o.name);
- setSub('v-os-sub',  o.sub);
- setSub('v-os-sub2', o.sub2);
+detectOS().then(function(o) {
+  sv('vOs', o.name);
+  ss('vOsSub', o.sub);
+  ss('vOsSub2', o.sub2);
+  ss('vOsWarn', 'Das Betriebssystem verrät potenzielle Sicherheitslücken. Veraltete Systeme ohne Updates sind ein häufiges Einfallstor für Angriffe.');
 });
 
-// Gerät + Akku (gemeinsam, da Akku für Laptop-Erkennung gebraucht wird)
-setVal('v-device','🖥 Desktop / Laptop'); // Platzhalter während Akku lädt
-detectBattery().then(result => {
- _batteryResult = result;
- updateDeviceType();
- renderBattery(result);
-});
+// Gerät
+var isMob = /Mobi|Android|iPhone/.test(navigator.userAgent);
+var isTab = /iPad|Android/.test(navigator.userAgent) && !/Mobile/.test(navigator.userAgent);
+sv('vDevice', isMob ? (isTab ? '📱 Tablet' : '📱 Smartphone') : '🖥 Desktop / Laptop');
+ss('vDevWarn', 'Apps auf Smartphones können auf weitaus mehr Daten zugreifen als Webseiten: Kamera, Mikrofon, Kontakte, Standort-Verlauf. Installiere nur Apps aus vertrauenswürdigen Quellen!');
 
 // Sprache
-setVal('v-lang',(navigator.languages||[navigator.language]).join('  ·  '));
+sv('vLang', (navigator.languages || [navigator.language]).join('  ·  '));
+ss('vLangWarn', 'Deine Browser-Sprache verrät Herkunft und Sprachkenntnisse und hilft, dich eindeutig zu identifizieren.');
 
 // Bildschirm
-const dpr=window.devicePixelRatio||1;
-const physW=Math.round(screen.width*dpr), physH=Math.round(screen.height*dpr);
-setVal('v-res',`${physW} × ${physH} px`);
-setSub('v-res-sub',
- `Skalierung: ${Math.round(dpr*100)}%  ·  Logisch: ${screen.width}×${screen.height}  ·  Viewport: ${window.innerWidth}×${window.innerHeight}`);
-setVal('v-color',`${screen.colorDepth}-Bit (${screen.colorDepth>=24?'True Color':'High Color'})`);
+var dpr = window.devicePixelRatio || 1;
+var physW = Math.round(screen.width * dpr), physH = Math.round(screen.height * dpr);
+sv('vRes', physW + ' × ' + physH + ' px');
+ss('vResSub', 'Skalierung: ' + Math.round(dpr*100) + '%  ·  Logisch: ' + screen.width + '×' + screen.height + '  ·  Viewport: ' + window.innerWidth + '×' + window.innerHeight);
+ss('vResWarn', 'Bildschirmauflösung und Skalierung sind Teil des Browser-Fingerprints und ermöglichen deine Wiedererkennung ohne Cookies.');
+sv('vColor', screen.colorDepth + '-Bit (' + (screen.colorDepth>=24?'True Color':'High Color') + ')');
 
-// CPU — mit Hinweis ob Wert ggf. verfälscht
-const cores = navigator.hardwareConcurrency;
-if(cores){
- setVal('v-cpu', `${cores} logische Kerne`);
- // Hinweis wird separat in buildFingerprintWarnings gesetzt,
- // aber kleiner Inline-Hint schadet nicht:
- setSub('v-cpu-sub', cores <= 2
-   ? '⚠ Wert könnte durch Browser-Datenschutz reduziert sein'
-   : 'Echte Kernanzahl (Browser gibt diesen Wert preis)');
-}else{
- setVal('v-cpu','Nicht verfügbar');
-}
+// CPU
+sv('vCpu', navigator.hardwareConcurrency ? navigator.hardwareConcurrency + ' logische Kerne' : 'Nicht verfügbar');
+ss('vCpuWarn', 'Die Anzahl der CPU-Kerne gibt Rückschlüsse auf die Geräteklasse und ist Teil des Browser-Fingerprints.');
 
 // RAM
-if(navigator.deviceMemory){
- setVal('v-ram',`≈ ${navigator.deviceMemory} GB`);
- setSub('v-ram-sub','Gerundeter Richtwert (absichtlich ungenau)');
-}else{
- setVal('v-ram','Nicht freigegeben');
- setSub('v-ram-sub','Firefox schützt diesen Wert · In Edge/Chrome/Brave sichtbar');
+if (navigator.deviceMemory) {
+  sv('vRam', '≈ ' + navigator.deviceMemory + ' GB');
+  ss('vRamSub', 'Absichtlich gerundeter Wert des Browsers');
+} else {
+  sv('vRam', 'Nicht freigegeben');
+  ss('vRamSub', 'Firefox schützt diesen Wert · In Edge/Chrome/Brave sichtbar');
 }
 
-// GPU
-(()=>{
- const gpu = detectGPU();
- if(gpu.renderer && !gpu.renderer.includes('Fehler') && !gpu.renderer.includes('nicht verfügbar')){
-   setVal('v-gpu', gpu.renderer);
-   const vendorStr = gpu.vendor ? `Hersteller: ${gpu.vendor}` : '';
-   // Raw-String nur anzeigen wenn er sich vom bereinigten unterscheidet
-   const rawDiff = gpu.raw && gpu.raw !== gpu.renderer ? `Roh: ${gpu.raw}` : '';
-   setSub('v-gpu-sub',  [vendorStr, gpu.note].filter(Boolean).join('  ·  '));
-   setSub('v-gpu-sub2', rawDiff);
- }else{
-   setVal('v-gpu', gpu.renderer || 'Nicht verfügbar');
-   setSub('v-gpu-sub', gpu.note || '');
- }
+// GPU via WebGL
+(function() {
+  try {
+    var gl = document.createElement('canvas').getContext('webgl') ||
+             document.createElement('canvas').getContext('experimental-webgl');
+    if (gl) {
+      var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      if (dbg) {
+        var renderer = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
+        var vendor   = gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL);
+        sv('vGpu',   renderer || 'Unbekannt');
+        ss('vGpuSub','GPU-Hersteller: ' + (vendor||'–'));
+        ss('vGpuWarn','Deine Grafikkarte ist eindeutig identifizierbar und ein starkes Fingerprint-Merkmal. Renderer und Hersteller werden ohne Nachfrage übermittelt.');
+        sv('vWebgl',   renderer || 'Unbekannt');
+        ss('vWebglVendor','Hersteller: ' + (vendor||'–'));
+        ss('vWebglWarn','Der exakte GPU-Renderer macht deinen Browser nahezu einzigartig. Werbetreibende nutzen ihn zur Wiedererkennung ohne Cookies.');
+      } else {
+        sv('vGpu',   'WebGL verfügbar, Debug-Info blockiert'); ss('vGpuSub','');
+        sv('vWebgl', 'WebGL verfügbar, Debug-Info blockiert');
+      }
+    } else {
+      sv('vGpu', 'WebGL nicht unterstützt'); sv('vWebgl', 'WebGL nicht unterstützt');
+    }
+  } catch(e) { sv('vGpu','Fehler'); sv('vWebgl','Fehler'); }
+})();
+
+// Canvas-Fingerprint
+(function() {
+  try {
+    var fc = document.getElementById('fpCvs');
+    var fctx = fc.getContext('2d');
+    fctx.textBaseline = 'top';
+    fctx.font = '14px Arial';
+    fctx.fillStyle = '#f60';
+    fctx.fillRect(125, 1, 62, 20);
+    fctx.fillStyle = '#069';
+    fctx.fillText('Browser Fingerprint 🌍', 2, 15);
+    fctx.fillStyle = 'rgba(102,204,0,.7)';
+    fctx.fillText('Browser Fingerprint 🌍', 4, 17);
+    var url = fc.toDataURL();
+    var hash = 0;
+    for (var i = 0; i < url.length; i++) { hash = (hash<<5) - hash + url.charCodeAt(i); hash |= 0; }
+    var hex = (hash>>>0).toString(16).toUpperCase().padStart(8,'0');
+    sv('vCanvasFp', '0x' + hex);
+    ss('vCanvasFpSub', 'Einzigartiger Rendering-Hash dieser GPU+Browser-Kombination');
+    ss('vCanvasWarn', 'Dieser Hash entsteht durch minimale GPU-Unterschiede beim Rendern von Text. Er ist auf deinem Gerät immer gleich — cookiefreie Wiedererkennung über Monate.');
+  } catch(e) { sv('vCanvasFp', 'Nicht verfügbar'); }
+})();
+
+// Adblocker
+(function() {
+  var bait = document.createElement('div');
+  bait.className = 'adsbox';
+  bait.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+  bait.innerHTML = '&nbsp;';
+  document.body.appendChild(bait);
+  setTimeout(function() {
+    var blocked = bait.offsetHeight === 0 || !bait.offsetParent;
+    if (bait.parentNode) bait.parentNode.removeChild(bait);
+    if (blocked) {
+      sv('vAdblocker', '✓ Adblocker aktiv');
+      ss('vAdblockerWarn', 'Gut! Ein Adblocker schützt vor Tracking-Scripts. Empfehlung: uBlock Origin.');
+    } else {
+      sv('vAdblocker', '✗ Kein Adblocker erkannt');
+      ss('vAdblockerWarn', 'Ohne Adblocker laden die meisten Webseiten Dutzende Tracking-Scripts im Hintergrund. Empfehlung: uBlock Origin installieren.');
+    }
+  }, 200);
 })();
 
 // Verbindungstyp
-(()=>{
- const c = detectConnection();
- if(c){
-   const html = `<span style="font-size:22px;margin-right:8px">${c.icon}</span><span>${c.label}</span>`;
-   setVal('v-conn', html, true);
-   setSub('v-conn-sub',  c.sub);
-   setSub('v-conn-sub2', c.sub2);
- }else{
-   setVal('v-conn','Nicht verfügbar');
-   setSub('v-conn-sub','Network Information API nicht unterstützt (z.B. Firefox & Safari)');
- }
+(function() {
+  var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (conn) {
+    var typeMap = { wifi:'📶 WLAN (WiFi)', ethernet:'🔌 Kabel (Ethernet)', cellular:'📡 Mobilfunk (4G/5G)',
+      bluetooth:'📘 Bluetooth', none:'Keine', unknown:'Unbekannt' };
+    sv('vConnType', typeMap[conn.type] || (typeMap[conn.effectiveType]) || conn.effectiveType || 'Unbekannt');
+    ss('vConnTypeWarn', 'Der Verbindungstyp verrät ob du zu Hause, unterwegs oder im Büro bist. Im Mobilfunknetz bist du zusätzlich über die Funkzelle lokalisierbar.');
+    if (conn.downlink || conn.rtt) {
+      sv('vConnSpeed', conn.downlink ? '≈ ' + conn.downlink + ' Mbit/s' : 'Unbekannt');
+      ss('vConnSpeedSub', conn.rtt ? 'Latenz (RTT): ' + conn.rtt + ' ms' : '');
+      ss('vConnSpeedWarn', 'Verbindungsgeschwindigkeit und Latenz geben Rückschlüsse auf deinen Anbieter und Standorttyp (Heim- vs. Mobilnetz).');
+    } else {
+      sv('vConnSpeed', 'Nicht verfügbar'); ss('vConnSpeedSub', 'Browser gibt keine Geschwindigkeit preis');
+    }
+  } else {
+    sv('vConnType',  'Nicht verfügbar'); ss('vConnTypeWarn',  'Firefox stellt Verbindungsinfos aus Datenschutzgründen nicht bereit.');
+    sv('vConnSpeed', 'Nicht verfügbar');
+  }
 })();
 
-// (Akku wird gemeinsam mit Gerätetyp weiter oben befüllt)
+// VPN/Proxy-Erkennung (Zeitzone vs. IP-Land)
+window._geoCC = null;
+setTimeout(async function() {
+  try {
+    var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    var tzCC = {
+      'Europe/Berlin':'DE','Europe/Paris':'FR','Europe/London':'GB','Europe/Madrid':'ES',
+      'Europe/Rome':'IT','Europe/Amsterdam':'NL','Europe/Brussels':'BE','Europe/Vienna':'AT',
+      'Europe/Zurich':'CH','Europe/Luxembourg':'LU','Europe/Warsaw':'PL','Europe/Prague':'CZ',
+      'America/New_York':'US','America/Chicago':'US','America/Denver':'US','America/Los_Angeles':'US',
+      'America/Toronto':'CA','Asia/Tokyo':'JP','Asia/Shanghai':'CN','Asia/Kolkata':'IN',
+      'Australia/Sydney':'AU','Europe/Moscow':'RU','Europe/Stockholm':'SE','Europe/Oslo':'NO',
+      'Europe/Lisbon':'PT','Europe/Athens':'GR','Europe/Budapest':'HU','Europe/Bucharest':'RO'
+    };
+    var tzCountry = tzCC[tz] || null;
+    var ipCountry = window._geoCC || null;
+    if (!tzCountry || !ipCountry) {
+      sv('vVpn', 'Nicht prüfbar'); ss('vVpnSub', 'Zu wenig Daten verfügbar'); return;
+    }
+    if (tzCountry !== ipCountry) {
+      sv('vVpn', '<span class="badge-warn">⚠ VPN / Proxy wahrscheinlich</span>', true);
+      ss('vVpnSub', 'Zeitzone → ' + tzCountry + ', IP → ' + ipCountry);
+      ss('vVpnWarn', 'Deine IP-Adresse und Browser-Zeitzone passen nicht zusammen — typisches Zeichen für VPN oder Proxy. Ein VPN schützt, macht dich aber nicht unsichtbar.');
+    } else {
+      sv('vVpn', '<span class="badge-ok">✓ Kein Verdacht</span>', true);
+      ss('vVpnSub', 'Zeitzone (' + tz + ') stimmt mit IP-Land (' + ipCountry + ') überein');
+      ss('vVpnWarn', 'Wenn Zeitzone und IP nicht übereinstimmen, können Webseiten einen VPN erkennen. Ein VPN verbessert trotzdem die Privatsphäre.');
+    }
+  } catch(e) { sv('vVpn', 'Nicht prüfbar'); }
+}, 4000); // warte bis Geo-Daten geladen sind
 
-// Privatsphäre
-const dnt=navigator.doNotTrack??window.doNotTrack;
-setVal('v-dnt', dnt==='1'?'✓ Aktiviert (DNT=1)':dnt==='0'?'✗ Deaktiviert':'Nicht gesetzt');
-setVal('v-cookies', navigator.cookieEnabled?'✓ Aktiviert':'✗ Deaktiviert');
-setVal('v-touch', navigator.maxTouchPoints>0
- ?`✓ Ja · ${navigator.maxTouchPoints} gleichzeitige Punkte`
- :'✗ Kein Touchscreen erkannt');
-
-// ════════════════════════════════════════════════════════════
-// IP + GEO
-// ════════════════════════════════════════════════════════════
-function applyGeo(ip,city,region,country,lat,lon,isp,asn){
- setVal('v-ip',`<div class="ip-badge"><div class="dot"></div>${ip}</div>`,true);
- setSub('v-ip-sub',`Protokoll: IPv${ip.includes(':')?'6 (modernes Internet)':'4'}`);
- setVal('v-loc',`${city||'?'}, ${region||'?'}`);
- setSub('v-loc-sub',`${country||'?'}  ·  ${Number(lat).toFixed(4)}°N, ${Number(lon).toFixed(4)}°E`);
- setVal('v-isp', isp||'–');
- setSub('v-isp-sub', asn||'');
+// Batterie
+if (navigator.getBattery) {
+  navigator.getBattery().then(function(bat) {
+    function upd() {
+      var pct = Math.round(bat.level * 100);
+      var chg = bat.charging;
+      var tl = chg ? bat.chargingTime : bat.dischargingTime;
+      var ts = '';
+      if (tl && tl !== Infinity) {
+        var hh = Math.floor(tl/3600), mm = Math.floor((tl%3600)/60);
+        ts = hh > 0 ? '  · noch ' + hh + 'h ' + mm + 'min' : '  · noch ' + mm + ' min';
+      }
+      sv('vBat', pct + '%  ' + (chg ? '⚡ Lädt' : '🔋 Akkubetrieb') + ts);
+      ss('vBatSub', chg ? 'Am Ladegerät angeschlossen' : 'Nicht verbunden mit Ladegerät');
+      var cls = pct < 20 ? 'low' : pct < 50 ? 'mid' : '';
+      document.getElementById('vBatVis').innerHTML =
+        '<div class="bat-visual"><div class="bat-body"><div class="bat-fill ' + cls + '" style="width:' + pct + '%"></div></div>'
+        + '<span style="font-size:12px;color:var(--muted)">' + pct + '%</span></div>';
+      ss('vBatWarn', 'Der Batteriestand wurde für sog. Battery-Fingerprinting missbraucht: eine fast leere Batterie ist selten — und macht dich dadurch kurzzeitig einzigartig identifizierbar. Firefox hat diese API deshalb stark eingeschränkt.');
+    }
+    upd();
+    bat.addEventListener('levelchange', upd);
+    bat.addEventListener('chargingchange', upd);
+  }).catch(function() {
+    sv('vBat', 'Nicht verfügbar'); ss('vBatSub', 'Browser verweigert Batterie-Zugriff (Datenschutz)');
+  });
+} else {
+  sv('vBat', 'Nicht verfügbar'); ss('vBatSub', 'Browser unterstützt Battery API nicht');
 }
 
-async function loadGeoIP(){
- try{
-   const d=await jsonp('https://ip-api.com/json/','callback','_cb1');
-   if(d?.status==='success'){ applyGeo(d.query,d.city,d.regionName,d.country,d.lat,d.lon,d.isp,d.as); return; }
- }catch{}
- try{
-   const d=await jsonp('https://ipinfo.io/json','callback','_cb2');
-   if(d?.ip){
-     const[lat,lon]=d.loc?d.loc.split(',').map(Number):[0,0];
-     applyGeo(d.ip,d.city||'?',d.region||'?',d.country||'?',lat,lon,d.org||'',''); return;
-   }
- }catch{}
- try{
-   const d=await fetchJSON('https://ipwho.is/');
-   if(d?.ip&&d.success!==false){
-     applyGeo(d.ip,d.city,d.region,d.country,d.latitude,d.longitude,
-       d.connection?.isp||d.org||'',d.connection?.asn?'AS'+d.connection.asn:''); return;
-   }
- }catch{}
- try{
-   const d=await fetchJSON('https://ipapi.co/json/');
-   if(d?.ip&&!d.error){
-     applyGeo(d.ip,d.city,d.region,d.country_name,d.latitude,d.longitude,d.org||'',d.asn||''); return;
-   }
- }catch{}
- setVal('v-ip','⚠ IP nicht abrufbar');
- setSub('v-ip-sub','Tipp: Schutz-Schild in der Adressleiste → für diese Seite deaktivieren');
- setVal('v-loc','Nicht verfügbar');
- setVal('v-isp','Nicht verfügbar');
+// Fingerprint-Score
+(function() {
+  var score = 15; // UA-String immer
+  score += 8;     // Zeitzone immer
+  score += 10;    // Canvas FP immer
+  if (navigator.hardwareConcurrency) score += 8;
+  if (navigator.deviceMemory) score += 6;
+  if (window.devicePixelRatio !== 1) score += 7;
+  try {
+    var gl2 = document.createElement('canvas').getContext('webgl');
+    if (gl2 && gl2.getExtension('WEBGL_debug_renderer_info')) score += 20;
+  } catch(e) {}
+  if (screen.width * screen.height > 1920*1080) score += 5;
+  if ((navigator.languages||[]).length > 1) score += 4;
+  if (navigator.connection) score += 5;
+  score = Math.min(score, 97);
+  var label = score >= 80 ? 'Sehr eindeutig identifizierbar' : score >= 60 ? 'Gut identifizierbar' : score >= 40 ? 'Mäßig identifizierbar' : 'Schwer identifizierbar';
+
+  sv('vFpScore', '');
+  var wrap = document.getElementById('fpWrap');
+  if (wrap) wrap.style.display = 'flex';
+  var numEl = document.getElementById('fpNum'); if (numEl) numEl.textContent = score;
+  var lblEl = document.getElementById('fpLabel'); if (lblEl) lblEl.textContent = label;
+  setTimeout(function() { var f = document.getElementById('fpFill'); if (f) f.style.width = score + '%'; }, 300);
+  ss('vFpSub', 'Fingerprint-Score basierend auf messbaren Browser-Merkmalen (0–100)');
+  ss('vFpWarn', 'Browser-Fingerprinting braucht keine Cookies. Die Kombination deiner Geräte-Merkmale macht dich in Millisekunden wiedererkennbar — weltweit, auf jeder Webseite die dieses Verfahren einsetzt. Selbst nach Browser-Reset oder Cookie-Löschung bleibt der Fingerprint gleich.');
+})();
+
+// Wiedererkennungs-Test
+(function() {
+  try {
+    var key = '__fp_visit__';
+    var stored = localStorage.getItem(key);
+    var now = new Date();
+    if (stored) {
+      var prev = new Date(parseInt(stored, 10));
+      var diff = Math.round((now - prev) / 1000 / 60);
+      var ago = diff < 60 ? 'vor ' + diff + ' Min.' : diff < 1440 ? 'vor ' + Math.round(diff/60) + ' Std.' : 'vor ' + Math.round(diff/1440) + ' Tagen';
+      sv('vStorage', '⚠ Dieses Gerät wurde erkannt!');
+      ss('vStorageSub', 'Letzter Besuch: ' + ago + ' (' + prev.toLocaleString('de-DE') + ')');
+      ss('vStorageWarn', 'Webseiten können dich ohne Cookies wiedererkennen — allein über localStorage oder IndexedDB. Diese Daten bleiben bis du deinen Browser-Speicher explizit löschst.');
+    } else {
+      sv('vStorage', 'Erstbesuch — ID wird gespeichert');
+      ss('vStorageSub', 'Beim nächsten Laden dieser Seite wirst du wiedererkannt!');
+      ss('vStorageWarn', 'Gerade wurde im Hintergrund eine Erkennungs-ID in deinem Browser gespeichert. Lade diese Seite neu — und du siehst wie einfach Wiedererkennung ohne Cookies funktioniert.');
+    }
+    localStorage.setItem(key, now.getTime().toString());
+  } catch(e) {
+    sv('vStorage', 'Nicht verfügbar'); ss('vStorageSub', 'Browser blockiert localStorage');
+  }
+})();
+
+// Privatsphäre
+var dnt = navigator.doNotTrack || window.doNotTrack;
+sv('vDnt', dnt==='1' ? '✓ Aktiviert (DNT=1)' : dnt==='0' ? '✗ Deaktiviert' : 'Nicht gesetzt');
+ss('vDntWarn', 'Do Not Track ist ein freiwilliger Standard — fast keine Webseite hält sich daran. Er ist kein technischer Schutz, nur eine Absichtserklärung.');
+sv('vCookies', navigator.cookieEnabled ? '✓ Aktiviert' : '✗ Deaktiviert');
+ss('vCookiesWarn', 'Cookies werden genutzt um dich zu verfolgen und seitenübergreifend zu tracken. Lösche sie regelmäßig oder nutze uBlock Origin.');
+sv('vTouch', navigator.maxTouchPoints > 0 ? '✓ Ja · ' + navigator.maxTouchPoints + ' gleichzeitige Punkte' : '✗ Kein Touchscreen erkannt');
+
+// ═══════════════════════════════════════════════════════
+// IP + GEO — JSONP zuerst, dann fetch-Fallbacks
+// ═══════════════════════════════════════════════════════
+function applyGeo(ip, city, region, country, cc, lat, lon, isp, asn) {
+  window._geoCC = cc;
+  sv('vIp', '<div class="ip-badge"><div class="dot"></div>' + ip + '</div>', true);
+  ss('vIpSub',  'Protokoll: IPv' + (ip.indexOf(':')>=0 ? '6 (modernes Internet)' : '4'));
+  ss('vIpWarn', 'Deine IP-Adresse verrät deinen ungefähren Standort — oft auf Stadtebene. Jede besuchte Webseite speichert sie automatisch in Server-Logs.');
+  sv('vLoc', (city||'?') + ', ' + (region||'?'));
+  ss('vLocSub',  (country||'?') + '  ·  ' + Number(lat).toFixed(4) + '°N, ' + Number(lon).toFixed(4) + '°E');
+  ss('vLocWarn', 'Webseiten kennen deine Stadt — ohne dass du jemals einen Standort freigegeben hast. Nur via IP-Adresse.');
+  sv('vIsp', isp || '–');
+  ss('vIspSub',  asn || '');
+  ss('vIspWarn', 'Dein Internet-Anbieter sieht alle unverschlüsselten Anfragen. Per Vorratsdatenspeicherung werden diese Verbindungsdaten gespeichert.');
+}
+
+async function loadGeoIP() {
+  try {
+    var d = await jsonp('https://ip-api.com/json/', 'callback', '_gc1');
+    if (d && d.status === 'success') {
+      applyGeo(d.query, d.city, d.regionName, d.country, d.countryCode, d.lat, d.lon, d.isp, d.as); return;
+    }
+  } catch(e) {}
+  try {
+    var d2 = await jsonp('https://ipinfo.io/json', 'callback', '_gc2');
+    if (d2 && d2.ip) {
+      var parts = d2.loc ? d2.loc.split(',').map(Number) : [0,0];
+      applyGeo(d2.ip, d2.city||'?', d2.region||'?', d2.country||'?', d2.country||'', parts[0], parts[1], d2.org||'', ''); return;
+    }
+  } catch(e) {}
+  try {
+    var d3 = await fj('https://ipwho.is/');
+    if (d3 && d3.ip && d3.success !== false) {
+      applyGeo(d3.ip, d3.city, d3.region, d3.country, d3.country_code, d3.latitude, d3.longitude,
+        (d3.connection&&d3.connection.isp)||d3.org||'', d3.connection&&d3.connection.asn?'AS'+d3.connection.asn:''); return;
+    }
+  } catch(e) {}
+  try {
+    var d4 = await fj('https://ipapi.co/json/');
+    if (d4 && d4.ip && !d4.error) {
+      applyGeo(d4.ip, d4.city, d4.region, d4.country_name, d4.country, d4.latitude, d4.longitude, d4.org||'', d4.asn||''); return;
+    }
+  } catch(e) {}
+  sv('vIp', '⚠ IP nicht abrufbar');
+  ss('vIpSub', 'Tipp: Schutz-Schild in der Adressleiste → für diese Seite deaktivieren');
+  sv('vLoc', 'Nicht verfügbar'); sv('vIsp', 'Nicht verfügbar');
 }
 
 loadGeoIP();
@@ -869,4 +862,3 @@ loadGeoIP();
 
 </body>
 </html>
-
