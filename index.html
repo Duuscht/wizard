@@ -174,7 +174,7 @@ canvas#clock{width:140px!important;height:140px!important}
 
   <div class="version-wrap">
     <div class="version-badge">
-      <strong>v5.1</strong>
+      <strong>v5.2</strong>
       <span>·</span>
       <span>25. März 2026</span>
       <span>·</span>
@@ -516,6 +516,21 @@ function winRelease(major) {
 }
 
 async function detectOS() {
+  // iPadOS 13+ tarnt sich als macOS — zuerst prüfen!
+  var uaStr = navigator.userAgent;
+  var isIpadOSDevice = /Macintosh/.test(uaStr) && navigator.maxTouchPoints > 1;
+  if (/iPad/.test(uaStr) || isIpadOSDevice) {
+    // iPadOS-Version aus UA holen (Format: "CPU OS 17_x_x")
+    var iosV = uaStr.match(/CPU OS ([\d_]+)/);
+    var ver = iosV ? iosV[1].replace(/_/g, '.') : '';
+    return { name: 'iPadOS' + (ver ? ' ' + ver : ''), sub: 'Apple iPad erkannt via Touch-Punkte', sub2: '' };
+  }
+  if (/iPhone/.test(uaStr)) {
+    var iosV2 = uaStr.match(/CPU iPhone OS ([\d_]+)/);
+    var ver2 = iosV2 ? iosV2[1].replace(/_/g, '.') : '';
+    return { name: 'iOS' + (ver2 ? ' ' + ver2 : ''), sub: 'Apple iPhone', sub2: '' };
+  }
+
   if (navigator.userAgentData) {
     try {
       var hi = await navigator.userAgentData.getHighEntropyValues(['platform','platformVersion','architecture','bitness']);
@@ -568,10 +583,21 @@ detectOS().then(function(o) {
 });
 
 // Gerät
-var isMob = /Mobi|Android|iPhone/.test(navigator.userAgent);
-var isTab = /iPad|Android/.test(navigator.userAgent) && !/Mobile/.test(navigator.userAgent);
-sv('vDevice', isMob ? (isTab ? '📱 Tablet' : '📱 Smartphone') : '🖥 Desktop / Laptop');
-ss('vDevWarn', 'Apps auf Smartphones können auf weitaus mehr Daten zugreifen als Webseiten: Kamera, Mikrofon, Kontakte, Standort-Verlauf. Installiere nur Apps aus vertrauenswürdigen Quellen!');
+// iPadOS 13+ meldet sich als macOS — Erkennung via Touch + Plattform
+var ua = navigator.userAgent;
+var isIpadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+var isIpad   = /iPad/.test(ua) || isIpadOS;
+var isIphone = /iPhone/.test(ua);
+var isMob    = /Mobi|Android/.test(ua) || isIphone;
+var isTab    = isIpad || (/Android/.test(ua) && !/Mobile/.test(ua));
+var deviceStr;
+if (isIpad)        deviceStr = '📱 Apple iPad (Tablet)';
+else if (isIphone) deviceStr = '📱 Apple iPhone (Smartphone)';
+else if (isTab)    deviceStr = '📱 Tablet';
+else if (isMob)    deviceStr = '📱 Smartphone';
+else               deviceStr = '🖥 Desktop / Laptop';
+sv('vDevice', deviceStr);
+ss('vDevWarn', 'Apps auf Smartphones und Tablets können auf weitaus mehr Daten zugreifen als Webseiten: Kamera, Mikrofon, Kontakte, Standort-Verlauf. Installiere nur Apps aus vertrauenswürdigen Quellen!');
 
 // Sprache
 sv('vLang', (navigator.languages || [navigator.language]).join('  ·  '));
@@ -688,8 +714,11 @@ if (navigator.deviceMemory) {
   }
 })();
 
-// VPN/Proxy-Erkennung (Zeitzone vs. IP-Land)
+// VPN/Proxy-Erkennung
+// Methode 1: Zeitzone vs. IP-Land (erkennt nur VPNs ins Ausland)
+// Methode 2: Prüfe ob IP aus bekanntem Datacenter/Hosting-AS kommt (ip-api liefert "proxy" Flag)
 window._geoCC = null;
+window._geoIsProxy = null;
 setTimeout(async function() {
   try {
     var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
@@ -704,20 +733,33 @@ setTimeout(async function() {
     };
     var tzCountry = tzCC[tz] || null;
     var ipCountry = window._geoCC || null;
-    if (!tzCountry || !ipCountry) {
-      sv('vVpn', 'Nicht prüfbar'); ss('vVpnSub', 'Zu wenig Daten verfügbar'); return;
+    var isProxy   = window._geoIsProxy; // true/false/null
+
+    var hints = [];
+
+    // Hinweis 1: Zeitzone stimmt nicht mit IP-Land überein
+    if (tzCountry && ipCountry && tzCountry !== ipCountry) {
+      hints.push('IP-Land (' + ipCountry + ') ≠ Browser-Zeitzone (' + tzCountry + ')');
     }
-    if (tzCountry !== ipCountry) {
+
+    // Hinweis 2: IP-API meldet Proxy/Hosting
+    if (isProxy === true) {
+      hints.push('IP als Datacenter / Hosting erkannt (ip-api.com)');
+    }
+
+    if (hints.length > 0) {
       sv('vVpn', '<span class="badge-warn">⚠ VPN / Proxy wahrscheinlich</span>', true);
-      ss('vVpnSub', 'Zeitzone → ' + tzCountry + ', IP → ' + ipCountry);
-      ss('vVpnWarn', 'Deine IP-Adresse und Browser-Zeitzone passen nicht zusammen — typisches Zeichen für VPN oder Proxy. Ein VPN schützt, macht dich aber nicht unsichtbar.');
+      ss('vVpnSub', hints.join('  ·  '));
+      ss('vVpnWarn', 'Mindestens ein Hinweis deutet auf VPN oder Proxy. Hinweis: VPNs mit Server im gleichen Land sind schwerer erkennbar. Ein VPN schützt vor Tracking, macht dich aber nicht vollständig anonym.');
+    } else if (ipCountry) {
+      sv('vVpn', '<span class="badge-ok">✓ Kein eindeutiger Hinweis</span>', true);
+      ss('vVpnSub', 'Zeitzone und IP-Land stimmen überein · Kein Hosting-Flag');
+      ss('vVpnWarn', 'Kein Verdacht bedeutet nicht zwingend kein VPN — VPNs mit lokalem Server (z.B. NordVPN DE-Server in Deutschland) sind kaum erkennbar. Diese Methode erkennt nur VPNs mit Server im Ausland oder bekannte Datacenter-IPs.');
     } else {
-      sv('vVpn', '<span class="badge-ok">✓ Kein Verdacht</span>', true);
-      ss('vVpnSub', 'Zeitzone (' + tz + ') stimmt mit IP-Land (' + ipCountry + ') überein');
-      ss('vVpnWarn', 'Wenn Zeitzone und IP nicht übereinstimmen, können Webseiten einen VPN erkennen. Ein VPN verbessert trotzdem die Privatsphäre.');
+      sv('vVpn', 'Nicht prüfbar'); ss('vVpnSub', 'Geo-Daten noch nicht verfügbar');
     }
   } catch(e) { sv('vVpn', 'Nicht prüfbar'); }
-}, 4000); // warte bis Geo-Daten geladen sind
+}, 4000);
 
 // Batterie
 if (navigator.getBattery) {
@@ -812,8 +854,9 @@ sv('vTouch', navigator.maxTouchPoints > 0 ? '✓ Ja · ' + navigator.maxTouchPoi
 // ═══════════════════════════════════════════════════════
 // IP + GEO — JSONP zuerst, dann fetch-Fallbacks
 // ═══════════════════════════════════════════════════════
-function applyGeo(ip, city, region, country, cc, lat, lon, isp, asn) {
+function applyGeo(ip, city, region, country, cc, lat, lon, isp, asn, isProxy) {
   window._geoCC = cc;
+  window._geoIsProxy = isProxy || false;
   sv('vIp', '<div class="ip-badge"><div class="dot"></div>' + ip + '</div>', true);
   ss('vIpSub',  'Protokoll: IPv' + (ip.indexOf(':')>=0 ? '6 (modernes Internet)' : '4'));
   ss('vIpWarn', 'Deine IP-Adresse verrät deinen ungefähren Standort — oft auf Stadtebene. Jede besuchte Webseite speichert sie automatisch in Server-Logs.');
@@ -829,7 +872,8 @@ async function loadGeoIP() {
   try {
     var d = await jsonp('https://ip-api.com/json/', 'callback', '_gc1');
     if (d && d.status === 'success') {
-      applyGeo(d.query, d.city, d.regionName, d.country, d.countryCode, d.lat, d.lon, d.isp, d.as); return;
+      applyGeo(d.query, d.city, d.regionName, d.country, d.countryCode, d.lat, d.lon, d.isp, d.as,
+        d.proxy || d.hosting || false); return;
     }
   } catch(e) {}
   try {
