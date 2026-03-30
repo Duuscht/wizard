@@ -87,7 +87,7 @@ opacity:0;transform:translateY(16px);animation:revealCard .5s forwards}
 .card.con::before{background:#22d3ee}
 .card.fpr::before{background:#f97316}
 .card.prv::before{background:var(–accent2)}
-.card-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;opacity:.5}
+.card-label{display:none}
 .card.net .card-label{color:var(–accent)}
 .card.bro .card-label{color:#a78bfa}
 .card.dev .card-label{color:var(–accent3)}
@@ -174,17 +174,17 @@ canvas#clock{width:140px!important;height:140px!important}
 
   <div class="version-wrap">
     <div class="version-badge">
-      <strong>v5.2</strong>
+      <strong>v5.13</strong>
       <span>·</span>
-      <span>25. März 2026</span>
+      <span>2026-03-29_20:15:44</span>
       <span>·</span>
       <span id="vb">Browser wird erkannt...</span>
     </div>
   </div>
 
   <div class="intro-box">
-    <strong>⚠ Was du hier siehst, sieht jede Webseite — ohne dass du etwas tust</strong>
-    <p>Jedes Mal wenn du eine Webseite öffnest, sendet dein Browser automatisch diese Informationen. Du musst nichts anklicken, nichts herunterladen, nichts erlauben. Diese Daten sind für jeden Webseitenbetreiber sichtbar — ohne dein Wissen. Apps auf deinem Smartphone können noch viel mehr: Kamera, Mikrofon, Kontakte, Standortverlauf. Überlege deshalb zweimal, bevor du eine unbekannte App installierst oder auf einen Link in WhatsApp, SMS oder E-Mail klickst.</p>
+    <strong>⚠ Das hier sieht jede Webseite von dir — ob du willst oder nicht</strong>
+    <p>Du hast nichts angeklickt, nichts heruntergeladen, nichts erlaubt — und trotzdem weiß diese Seite bereits wo du ungefähr wohnst, welches Gerät du nutzt, welchen Browser, welche Sprache, und kann dich beim nächsten Besuch wiedererkennen. Genau das passiert auf jeder Webseite im Internet, im Hintergrund, automatisch, ohne dass jemand dich fragt. Unten siehst du was das konkret bedeutet.</p>
   </div>
 
   <!-- UHRZEIT -->
@@ -237,6 +237,31 @@ canvas#clock{width:140px!important;height:140px!important}
   <!-- unsichtbares Canvas für Fingerprint -->
 
 <canvas id="fpCvs" width="300" height="50" style="display:none"></canvas>
+
+  <!-- FAZIT -->
+  <div style="background:rgba(255,77,109,.05);border:1px solid rgba(255,77,109,.2);border-left:3px solid var(--accent2);border-radius:4px;padding:24px 28px;margin-bottom:32px">
+    <strong style="color:var(--accent2);font-size:12px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:12px">// Was bedeutet das alles?</strong>
+    <p style="font-size:13px;color:#e8c8c8;line-height:2;margin-bottom:12px">
+      Was du hier gesehen hast, passiert auf <em>jeder</em> Webseite die du besuchst — nicht nur auf dieser.
+      Werbefirmen, Datenhändler und große Konzerne sammeln diese Informationen automatisch,
+      kombinieren sie und erstellen über Jahre hinweg detaillierte Profile:
+      wo du wohnst, was dich interessiert, wie viel du verdienen könntest, wie alt du bist.
+    </p>
+    <p style="font-size:13px;color:#e8c8c8;line-height:2;margin-bottom:12px">
+      Diese Profile werden verkauft — an Versicherungen, Arbeitgeber, politische Parteien, Werbetreibende.
+      Du siehst andere Preise als jemand anderes. Du siehst andere Nachrichten.
+      Du wirst in Kategorien eingeteilt die du nie gewählt hast.
+    </p>
+    <p style="font-size:13px;color:#e8c8c8;line-height:2;margin-bottom:16px">
+      Du kannst das nicht vollständig verhindern — aber du kannst bewusster damit umgehen.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;font-size:12px;color:#c8a8a8">
+      <div style="background:rgba(255,77,109,.08);padding:12px 16px;border-radius:3px">✓ &nbsp;<strong style="color:#fff">uBlock Origin</strong> installieren — blockiert die meisten Tracking-Scripts kostenlos</div>
+      <div style="background:rgba(255,77,109,.08);padding:12px 16px;border-radius:3px">✓ &nbsp;<strong style="color:#fff">DNS ändern</strong> auf 1.1.1.1 — dein Anbieter sieht nicht mehr welche Seiten du besuchst</div>
+      <div style="background:rgba(255,77,109,.08);padding:12px 16px;border-radius:3px">✓ &nbsp;<strong style="color:#fff">Browser aktuell halten</strong> — schützt vor bekannten Sicherheitslücken</div>
+      <div style="background:rgba(255,77,109,.08);padding:12px 16px;border-radius:3px">✓ &nbsp;<strong style="color:#fff">Apps kritisch prüfen</strong> — warum braucht eine Taschenlampen-App Zugriff auf deine Kontakte?</div>
+    </div>
+  </div>
 
   <footer>
     Alle Daten werden lokal in deinem Browser ausgelesen.<br>
@@ -321,32 +346,41 @@ function nowAccurate() { return new Date(Date.now() + timeOffset); }
 
 var TIME_SRC = [
   { fn: async function() {
-      var d = await fj('https://worldtimeapi.org/api/timezone/Etc/UTC');
+      var d = await fj('https://worldtimeapi.org/api/timezone/Etc/UTC', 4000);
       return new Date(d.utc_datetime || d.datetime).getTime();
   }},
   { fn: async function() {
-      var d = await fj('https://timeapi.io/api/time/current/zone?timeZone=UTC');
+      var d = await fj('https://timeapi.io/api/time/current/zone?timeZone=UTC', 4000);
       if (!d.year) throw new Error('bad');
       return Date.UTC(d.year, d.month-1, d.day, d.hour, d.minute, d.seconds);
   }}
 ];
 
+var syncInProgress = false; // Race-condition verhindern
+
 async function syncTime() {
-  for (var i = 0; i < TIME_SRC.length; i++) {
-    try {
-      var t0 = Date.now();
-      var ms = await TIME_SRC[i].fn();
-      var rtt = (Date.now() - t0) / 2;
-      timeOffset = ms + rtt - Date.now();
-      isOnline = true;
-      if (!animGo) { animGo = true; requestAnimationFrame(clockLoop); }
-      updBadge();
-      return true;
-    } catch(e) {}
+  if (syncInProgress) return null; // laufenden Sync nicht unterbrechen
+  syncInProgress = true;
+  try {
+    for (var i = 0; i < TIME_SRC.length; i++) {
+      try {
+        var t0 = Date.now();
+        var ms = await TIME_SRC[i].fn();
+        var rtt = (Date.now() - t0) / 2;
+        timeOffset = ms + rtt - Date.now();
+        var wasOffline = !isOnline;
+        isOnline = true;
+        if (!animGo || wasOffline) { animGo = true; requestAnimationFrame(clockLoop); }
+        updBadge();
+        return true;
+      } catch(e) {}
+    }
+    // Beide Zeitserver nicht erreichbar → offline
+    if (isOnline) { isOnline = false; updBadge(); freezeDisplay(); }
+    return false;
+  } finally {
+    syncInProgress = false;
   }
-  isOnline = false;
-  updBadge();
-  return false;
 }
 
 function updBadge() {
@@ -401,27 +435,90 @@ function drawAnalog(t) {
   ctx.beginPath(); ctx.arc(R,R,2.5,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
 }
 
-var lastSec = -1;
-function clockLoop() {
-  var t = nowAccurate();
-  drawAnalog(t);
-  if (t.getSeconds() !== lastSec) {
-    lastSec = t.getSeconds();
-    document.getElementById('timeDisplay').textContent = pad(t.getHours())+':'+pad(t.getMinutes())+':'+pad(t.getSeconds());
-    document.getElementById('dateDisplay').textContent = DAYS[t.getDay()]+', '+t.getDate()+'. '+MONS[t.getMonth()]+' '+t.getFullYear();
-    document.getElementById('tzDisplay').textContent   = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  }
-  if (isOnline) requestAnimationFrame(clockLoop);
-  else setTimeout(function() { requestAnimationFrame(clockLoop); }, 500);
+// Zeitanzeige: Systemzeitzone kann falsch sein (z.B. Firefox meldet Atlantic/Reykjavik = UTC+0
+// obwohl die echte Lokalzeit UTC+2 ist). Lösung: echten UTC-Offset des Betriebssystems
+// einmalig beim Start messen — Differenz zwischen Date.getHours() und UTC-Stunde.
+// Dieser Offset ist korrekt, weil Date() immer die OS-Lokalzeit kennt, auch wenn
+// Intl die falsche IANA-Zeitzone meldet.
+var _localTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+var _tzOffsetMs = -(new Date().getTimezoneOffset() * 60000); // getTimezoneOffset ist negiert
+
+function localParts(utcDate) {
+  // UTC-ms + OS-Offset = lokale Zeit, manuell berechnet
+  var localMs = utcDate.getTime() + _tzOffsetMs;
+  var d = new Date(localMs); // als UTC-Date mit lokalem Wert lesen via UTC-Getter
+  var dayNames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  var monNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  return {
+    h:  d.getUTCHours(),
+    m:  d.getUTCMinutes(),
+    s:  d.getUTCSeconds(),
+    wd: dayNames[d.getUTCDay()],
+    d:  d.getUTCDate(),
+    mo: monNames[d.getUTCMonth()],
+    y:  d.getUTCFullYear(),
+  };
 }
 
-// Sofort erste Zeichnung (grau)
-drawAnalog(new Date());
+// Echten Offset als lesbaren String ermitteln
+var _tzOffsetH = Math.round(_tzOffsetMs / 3600000);
+// Firefox mit privacy.resistFingerprinting meldet absichtlich UTC+0 / Atlantic/Reykjavik
+var _rfpActive = (_localTZ === 'Atlantic/Reykjavik' || _localTZ === 'UTC') && _tzOffsetH === 0;
+var _tzLabel = _rfpActive
+  ? _localTZ + '  (UTC+0)  ⚠ Firefox resistFingerprinting aktiv — Zeitzone verschleiert'
+  : _localTZ + '  (UTC' + (_tzOffsetH >= 0 ? '+' : '') + _tzOffsetH + ')';
+
+
+var lastSec = -1;
+function clockLoop() {
+  if (!isOnline) return;
+  var t = nowAccurate();
+  drawAnalog(t);
+  var lp = localParts(t);
+  if (lp.s !== lastSec) {
+    lastSec = lp.s;
+    document.getElementById('timeDisplay').textContent = pad(lp.h)+':'+pad(lp.m)+':'+pad(lp.s);
+    document.getElementById('dateDisplay').textContent = lp.wd+', '+lp.d+'. '+lp.mo+' '+lp.y;
+    document.getElementById('tzDisplay').textContent = _tzLabel;
+    if (_rfpActive) {
+      document.getElementById('syncStatus').textContent = '⚠ Firefox resistFingerprinting · Uhrzeit = UTC (nicht Lokalzeit)';
+      document.getElementById('syncStatus').className = 'sync-status offline';
+    }
+  }
+  requestAnimationFrame(clockLoop);
+}
+
+function freezeDisplay() {
+  // Digitaluhr einfrieren: Wert stehen lassen, Opacity runter
+  document.getElementById('timeDisplay').style.opacity = '.35';
+  // Analoguhr: neu zeichnen mit isOnline=false → kein roter Sekundenzeiger, grau
+  drawAnalog(nowAccurate());
+}
+
+// Zifferblatt ohne Zeiger zeichnen bis Zeitserver antwortet
+(function drawFaceOnly() {
+  var c = '100,150,170'; // neutral grau-blau
+  ctx.clearRect(0, 0, W, W);
+  ctx.beginPath(); ctx.arc(R, R, R-4, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba('+c+',.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+  for (var i = 0; i < 60; i++) {
+    var a = (i/60)*Math.PI*2 - Math.PI/2, maj = (i%5===0);
+    ctx.beginPath();
+    ctx.moveTo(R+Math.cos(a)*(R-(maj?14:8)), R+Math.sin(a)*(R-(maj?14:8)));
+    ctx.lineTo(R+Math.cos(a)*(R-4),          R+Math.sin(a)*(R-4));
+    ctx.strokeStyle = 'rgba('+c+','+(maj?.5:.15)+')'; ctx.lineWidth = maj?2:1; ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(R,R,5,0,Math.PI*2); ctx.fillStyle='rgba('+c+',.5)'; ctx.fill();
+})();
 
 // Sync-Schleife
-(function sl() { syncTime().finally(function() { setTimeout(sl, 5000); }); })();
-window.addEventListener('offline', function() { isOnline=false; updBadge(); });
-window.addEventListener('online',  function() { syncTime(); });
+(function sl() { syncTime().finally(function() { setTimeout(sl, 4000); }); })();
+window.addEventListener('offline', function() {
+  isOnline = false;
+  updBadge();      // Badge auf OFFLINE
+  freezeDisplay(); // Anzeige sofort einfrieren
+});
+window.addEventListener('online', function() { syncTime(); });
 
 // ═══════════════════════════════════════════════════════
 // KARTEN ANLEGEN
@@ -453,6 +550,10 @@ mkCard('gScr','dev','// Hardware','Batterie & Ladezustand','vBat',
 mkCard('gCon','con','// Verbindung','Verbindungstyp','vConnType', {warn:'vConnTypeWarn'});
 mkCard('gCon','con','// Verbindung','Verbindungsgeschwindigkeit','vConnSpeed', {sub:'vConnSpeedSub', warn:'vConnSpeedWarn'});
 mkCard('gCon','net','// Netzwerk','VPN / Proxy erkannt?','vVpn', {sub:'vVpnSub', warn:'vVpnWarn'});
+mkCard('gCon','con','// Verbindung','DNS-Anbieter','vDns', {sub:'vDnsSub', warn:'vDnsWarn'});
+mkCard('gCon','con','// Verbindung','DNS-Leak Check','vDnsLeak',
+  {sub:'vDnsLeakSub', warn:'vDnsLeakWarn',
+   xtra:'<div id="vDnsLeakList" style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.9"></div>'});
 
 // FINGERPRINT
 mkCard('gFpr','fpr','// Fingerprint','Einzigartigkeit deines Browsers','vFpScore',
@@ -509,10 +610,32 @@ async function detectBrowser() {
   return { name:'Unbekannt', ver:'', engine:'', note:'' };
 }
 
-// Windows Release-Mapping
+// Windows Release-Mapping via platformVersion (major) + optionaler Build-Nummer
+// Chromium liefert platformVersion als "Major.Minor.Patch" — Major entspricht dem Windows-Build-Zweig
+// Quellen: https://learn.microsoft.com/en-us/microsoft-edge/web-platform/how-to-detect-win11
 function winRelease(major) {
-  var m = {20:'26H1',19:'26H1',18:'24H2',17:'24H1',16:'23H2',15:'22H2 / 23H1',13:'22H2'};
-  return m[major] || null;
+  // Windows 11 Releases (major >= 13)
+  var w11 = {
+    26: '25H2',   // Build 26200.x
+    25: '24H2',   // Build 26100.x
+    22: '23H2',   // Build 22631.x
+    21: '22H2',   // Build 22621.x — 22H2 und 23H2 teilen sich denselben Kernel
+    20: '22H2',
+    19: '22H2',
+    18: '22H2',
+    17: '22H2',
+    16: '22H2',
+    15: '21H2',   // Erste Windows 11 Version
+    14: '21H2',
+    13: '21H2'
+  };
+  // Windows 10 Releases (major < 13)
+  var w10 = {
+    12: '22H2', 11: '21H2', 10: '21H1', 9: '20H2', 8: '2004',
+    7: '1909', 6: '1903', 5: '1809', 4: '1803', 3: '1709'
+  };
+  if (major >= 13) return w11[major] || null;
+  return w10[major] || null;
 }
 
 async function detectOS() {
@@ -538,11 +661,34 @@ async function detectOS() {
       if (plat.indexOf('windows') >= 0) {
         var major = parseInt((hi.platformVersion || '0').split('.')[0], 10);
         var rel = winRelease(major);
-        var arch = hi.architecture ? ' · ' + hi.architecture + (hi.bitness?'-'+hi.bitness:'') : '';
         var isW11 = major >= 13;
+        var archStr = '';
+        if (hi.architecture) {
+          var a = hi.architecture.toLowerCase(), b = hi.bitness || '';
+          if (a === 'x86' && b === '64') archStr = 'x64 (64-bit)';
+          else if (a === 'x86' && b === '32') archStr = 'x86 (32-bit)';
+          else if (a === 'arm' && b === '64') archStr = 'ARM64';
+          else if (a === 'arm') archStr = 'ARM';
+          else archStr = hi.architecture + (b ? '-' + b + 'bit' : '');
+        }
+        // Plausibilitätsprüfung: manche Browser (Brave, ältere Edge) verschleiern platformVersion
+        // major 0–12 = Windows 10, 13+ = Windows 11 laut Microsoft-Dokumentation
+        // Wenn major sehr niedrig (< 13) aber userAgentData vorhanden → wahrscheinlich verschleiert
+        var frozen = (major < 13 && isW11 === false && major > 0);
+        var browserFrozen = isBraveBrowser; // Brave friert grundsätzlich ein
+        if (browserFrozen || frozen) {
+          // Trotzdem W10 vs W11 via UA-String versuchen
+          var ua2 = navigator.userAgent;
+          var isDefinitelyW11 = /Windows NT 10\.0/.test(ua2) && major >= 13;
+          return {
+            name: 'Windows 11',
+            sub:  'Architektur: ' + (archStr || 'unbekannt'),
+            sub2: '⚠ Browser verschleiert die genaue Version zum Schutz vor Fingerprinting · winver für exakten Release'
+          };
+        }
         return {
-          name: isW11 ? 'Windows 11' + (rel?' ('+rel+')':'') : 'Windows 10' + (rel?' ('+rel+')':''),
-          sub:  'Plattform-Version: ' + hi.platformVersion + arch,
+          name: isW11 ? 'Windows 11' + (rel ? ' ' + rel : '') : 'Windows 10' + (rel ? ' ' + rel : ''),
+          sub:  'Architektur: ' + (archStr || 'unbekannt') + (rel ? ' · Release ' + rel : ''),
           sub2: ''
         };
       }
@@ -551,7 +697,7 @@ async function detectOS() {
     } catch(e) {}
   }
   var ua = navigator.userAgent;
-  if (/Windows NT 10\.0/.test(ua)) return { name:'Windows 10 / 11', sub:'Firefox versteckt die genaue Version (Datenschutz)', sub2:'In Edge/Chrome/Brave wäre Windows 11 exakt erkennbar' };
+  if (/Windows NT 10\.0/.test(ua)) return { name:'Windows 10 / 11', sub:'Genaue Version nicht ermittelbar · Browser schützt diese Info', sub2:'winver im Startmenü eingeben für exakten Release' };
   if (/Windows NT 6\.3/.test(ua)) return { name:'Windows 8.1', sub:'', sub2:'' };
   var andM = ua.match(/Android ([\d.]+)/);
   if (andM) return { name:'Android '+andM[1], sub:'', sub2:'' };
@@ -570,7 +716,7 @@ async function detectOS() {
 detectBrowser().then(function(b) {
   sv('vBrowser', b.name + ' ' + b.ver);
   ss('vEngine', 'Rendering-Engine: ' + b.engine + (b.note?' · '+b.note:''));
-  ss('vBrowserWarn', 'Webseiten sehen welchen Browser du nutzt. Angriffe zielen gezielt auf veraltete Browser-Versionen. Halte deinen Browser stets aktuell!');
+  ss('vBrowserWarn', 'Jede Webseite sieht welchen Browser du nutzt. Das klingt harmlos — aber veraltete Browser haben bekannte Sicherheitslücken die Angreifer gezielt ausnutzen. Halte deinen Browser immer aktuell.');
   document.getElementById('vb').textContent = b.name + ' ' + b.ver;
 });
 
@@ -579,7 +725,7 @@ detectOS().then(function(o) {
   sv('vOs', o.name);
   ss('vOsSub', o.sub);
   ss('vOsSub2', o.sub2);
-  ss('vOsWarn', 'Das Betriebssystem verrät potenzielle Sicherheitslücken. Veraltete Systeme ohne Updates sind ein häufiges Einfallstor für Angriffe.');
+  ss('vOsWarn', 'Webseiten sehen dein Betriebssystem — und wissen damit welche Sicherheitslücken dein Gerät möglicherweise hat. Wer kein Windows Update macht, läuft mit bekannten Schwachstellen im Netz.');
 });
 
 // Gerät
@@ -595,25 +741,45 @@ if (isIpad)        deviceStr = '📱 Apple iPad (Tablet)';
 else if (isIphone) deviceStr = '📱 Apple iPhone (Smartphone)';
 else if (isTab)    deviceStr = '📱 Tablet';
 else if (isMob)    deviceStr = '📱 Smartphone';
-else               deviceStr = '🖥 Desktop / Laptop';
-sv('vDevice', deviceStr);
-ss('vDevWarn', 'Apps auf Smartphones und Tablets können auf weitaus mehr Daten zugreifen als Webseiten: Kamera, Mikrofon, Kontakte, Standort-Verlauf. Installiere nur Apps aus vertrauenswürdigen Quellen!');
+else {
+  // Laptop vs Desktop: Browser-APIs erlauben keine sichere Unterscheidung.
+  // Beste verfügbare Heuristik: Batterie-Status
+  var cores = navigator.hardwareConcurrency || 0;
+  var deviceLabel = cores > 24 ? '🖥 Desktop / Workstation' : '🖥 Desktop / Laptop';
+  if (navigator.getBattery) {
+    navigator.getBattery().then(function(bat) {
+      // Wenn Batterie-API antwortet UND ein Entlade-/Ladevorgang erkennbar ist → Laptop
+      // Reine Desktops haben bat.level = 1.0, charging = true, dischargingTime = Infinity
+      var likelyLaptop = !(bat.level === 1 && bat.charging && bat.dischargingTime === Infinity);
+      sv('vDevice', likelyLaptop ? '💻 Laptop' : '🖥 Desktop / Laptop');
+      ss('vDevWarn', likelyLaptop
+        ? 'Auf Smartphones und Tablets ist es noch schlimmer: Apps können dort auf Kamera, Mikrofon, Kontakte und deinen genauen Standortverlauf zugreifen — oft ohne dass du es merkst.'
+        : 'Auf Smartphones und Tablets ist es noch schlimmer: Apps können dort auf Kamera, Mikrofon, Kontakte und deinen genauen Standortverlauf zugreifen — oft ohne dass du es merkst.');
+    }).catch(function() { sv('vDevice', deviceLabel); });
+  } else {
+    deviceLabel = cores > 24 ? '🖥 Desktop / Workstation' : '🖥 Desktop / Laptop';
+    sv('vDevice', deviceLabel);
+  }
+  deviceStr = null; // wird async gesetzt
+}
+if (deviceStr !== null) sv('vDevice', deviceStr);
+ss('vDevWarn', 'Auf Smartphones und Tablets ist es noch schlimmer: Apps können dort auf Kamera, Mikrofon, Kontakte und deinen genauen Standortverlauf zugreifen — oft ohne dass du es merkst. Installiere nur Apps aus bekannten Quellen.');
 
 // Sprache
 sv('vLang', (navigator.languages || [navigator.language]).join('  ·  '));
-ss('vLangWarn', 'Deine Browser-Sprache verrät Herkunft und Sprachkenntnisse und hilft, dich eindeutig zu identifizieren.');
+ss('vLangWarn', 'Deine Spracheinstellung verrät mehr als du denkst: Herkunft, Muttersprache, manchmal sogar ob du im Ausland lebst. Kombiniert mit anderen Merkmalen hilft sie, dich eindeutig zu identifizieren.');
 
 // Bildschirm
 var dpr = window.devicePixelRatio || 1;
 var physW = Math.round(screen.width * dpr), physH = Math.round(screen.height * dpr);
 sv('vRes', physW + ' × ' + physH + ' px');
 ss('vResSub', 'Skalierung: ' + Math.round(dpr*100) + '%  ·  Logisch: ' + screen.width + '×' + screen.height + '  ·  Viewport: ' + window.innerWidth + '×' + window.innerHeight);
-ss('vResWarn', 'Bildschirmauflösung und Skalierung sind Teil des Browser-Fingerprints und ermöglichen deine Wiedererkennung ohne Cookies.');
+ss('vResWarn', 'Klingt technisch und harmlos — ist es aber nicht. Deine Bildschirmauflösung ist einer von vielen Bausteinen die zusammen ein einzigartiges "Profil" von dir ergeben, ganz ohne Cookies.');
 sv('vColor', screen.colorDepth + '-Bit (' + (screen.colorDepth>=24?'True Color':'High Color') + ')');
 
 // CPU
 sv('vCpu', navigator.hardwareConcurrency ? navigator.hardwareConcurrency + ' logische Kerne' : 'Nicht verfügbar');
-ss('vCpuWarn', 'Die Anzahl der CPU-Kerne gibt Rückschlüsse auf die Geräteklasse und ist Teil des Browser-Fingerprints.');
+ss('vCpuWarn', 'Auch die Leistungsstärke deines Geräts ist sichtbar. Werbefirmen nutzen das um einzuschätzen ob du ein teures Gerät hast — und zeigen dir entsprechend höhere Preise.');
 
 // RAM
 if (navigator.deviceMemory) {
@@ -636,10 +802,10 @@ if (navigator.deviceMemory) {
         var vendor   = gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL);
         sv('vGpu',   renderer || 'Unbekannt');
         ss('vGpuSub','GPU-Hersteller: ' + (vendor||'–'));
-        ss('vGpuWarn','Deine Grafikkarte ist eindeutig identifizierbar und ein starkes Fingerprint-Merkmal. Renderer und Hersteller werden ohne Nachfrage übermittelt.');
+        ss('vGpuWarn','Deine Grafikkarte hat eine einzigartige Kennung — ähnlich einer Seriennummer. Webseiten können sie auslesen, ohne dass du es siehst oder verhindern kannst.');
         sv('vWebgl',   renderer || 'Unbekannt');
         ss('vWebglVendor','Hersteller: ' + (vendor||'–'));
-        ss('vWebglWarn','Der exakte GPU-Renderer macht deinen Browser nahezu einzigartig. Werbetreibende nutzen ihn zur Wiedererkennung ohne Cookies.');
+        ss('vWebglWarn','Diese technische Kennung deiner Grafikkarte ist so spezifisch, dass sie dich unter Millionen von Nutzern identifizieren kann — auch wenn du alle Cookies löschst.');
       } else {
         sv('vGpu',   'WebGL verfügbar, Debug-Info blockiert'); ss('vGpuSub','');
         sv('vWebgl', 'WebGL verfügbar, Debug-Info blockiert');
@@ -669,7 +835,7 @@ if (navigator.deviceMemory) {
     var hex = (hash>>>0).toString(16).toUpperCase().padStart(8,'0');
     sv('vCanvasFp', '0x' + hex);
     ss('vCanvasFpSub', 'Einzigartiger Rendering-Hash dieser GPU+Browser-Kombination');
-    ss('vCanvasWarn', 'Dieser Hash entsteht durch minimale GPU-Unterschiede beim Rendern von Text. Er ist auf deinem Gerät immer gleich — cookiefreie Wiedererkennung über Monate.');
+    ss('vCanvasWarn', 'Jedes Gerät zeichnet Grafiken mikroskopisch anders — durch Unterschiede in Grafikkarte, Treiber und Betriebssystem. Daraus entsteht ein unsichtbarer "Abdruck" der dich über Monate wiedererkennt, egal ob du Cookies löschst oder den Browser wechselst.');
   } catch(e) { sv('vCanvasFp', 'Nicht verfügbar'); }
 })();
 
@@ -685,10 +851,10 @@ if (navigator.deviceMemory) {
     if (bait.parentNode) bait.parentNode.removeChild(bait);
     if (blocked) {
       sv('vAdblocker', '✓ Adblocker aktiv');
-      ss('vAdblockerWarn', 'Gut! Ein Adblocker schützt vor Tracking-Scripts. Empfehlung: uBlock Origin.');
+      ss('vAdblockerWarn', 'Gut — ein Adblocker ist eine der wenigen Maßnahmen die wirklich etwas bringen. Er blockiert viele der unsichtbaren Tracking-Scripts bevor sie laden. Empfehlung: uBlock Origin (kostenlos, für alle Browser).');
     } else {
       sv('vAdblocker', '✗ Kein Adblocker erkannt');
-      ss('vAdblockerWarn', 'Ohne Adblocker laden die meisten Webseiten Dutzende Tracking-Scripts im Hintergrund. Empfehlung: uBlock Origin installieren.');
+      ss('vAdblockerWarn', 'Ohne Adblocker laden auf den meisten Webseiten unsichtbare Tracking-Scripts — von Google, Meta, Werbenetzwerken — die jede deine Bewegung im Internet aufzeichnen. Ein kostenloser Adblocker wie uBlock Origin blockiert das zuverlässig.');
     }
   }, 200);
 })();
@@ -696,21 +862,57 @@ if (navigator.deviceMemory) {
 // Verbindungstyp
 (function() {
   var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  if (conn) {
+
+  // Brave erkennen (async, daher Flag setzen)
+  var isBraveBrowser = !!navigator.brave;
+
+  if (conn && (conn.type || conn.effectiveType || conn.downlink || conn.rtt)) {
     var typeMap = { wifi:'📶 WLAN (WiFi)', ethernet:'🔌 Kabel (Ethernet)', cellular:'📡 Mobilfunk (4G/5G)',
       bluetooth:'📘 Bluetooth', none:'Keine', unknown:'Unbekannt' };
-    sv('vConnType', typeMap[conn.type] || (typeMap[conn.effectiveType]) || conn.effectiveType || 'Unbekannt');
-    ss('vConnTypeWarn', 'Der Verbindungstyp verrät ob du zu Hause, unterwegs oder im Büro bist. Im Mobilfunknetz bist du zusätzlich über die Funkzelle lokalisierbar.');
-    if (conn.downlink || conn.rtt) {
-      sv('vConnSpeed', conn.downlink ? '≈ ' + conn.downlink + ' Mbit/s' : 'Unbekannt');
-      ss('vConnSpeedSub', conn.rtt ? 'Latenz (RTT): ' + conn.rtt + ' ms' : '');
-      ss('vConnSpeedWarn', 'Verbindungsgeschwindigkeit und Latenz geben Rückschlüsse auf deinen Anbieter und Standorttyp (Heim- vs. Mobilnetz).');
+    // effectiveType beschreibt nur die Qualitätsstufe, NICHT den physischen Typ
+    // '4g' = "schnell genug für Video" — kann WLAN, Ethernet oder LTE sein
+    var effectiveTypeMap = { 'slow-2g':'🐢 Sehr langsam (< 50kbps)', '2g':'📡 Langsam (~250kbps)', '3g':'📡 Mittel (~750kbps)', '4g':'✓ Schnell (Breitband-Qualität)' };
+    var connType = conn.type;
+    var typeVal, typeWarn;
+    if (connType && typeMap[connType]) {
+      typeVal = typeMap[connType];
+      typeWarn = 'Ob du gerade zuhause im WLAN bist, im Büro oder unterwegs im Mobilfunknetz — Webseiten können das unterscheiden. Im Mobilfunknetz lässt sich dein Standort zusätzlich über die Funkzelle eingrenzen.';
+    } else if (conn.effectiveType) {
+      // Kein conn.type verfügbar — nur Qualitätsklasse bekannt
+      typeVal = effectiveTypeMap[conn.effectiveType] || conn.effectiveType;
+      typeWarn = '⚠ Physischer Verbindungstyp (WLAN/Kabel/Mobilfunk) nicht ermittelbar — Browser gibt nur die Qualitätsstufe preis. "Schnell" bedeutet Breitband-Qualität, nicht zwingend Mobilfunk.';
     } else {
-      sv('vConnSpeed', 'Nicht verfügbar'); ss('vConnSpeedSub', 'Browser gibt keine Geschwindigkeit preis');
+      typeVal = 'Unbekannt';
+      typeWarn = 'Verbindungstyp nicht verfügbar.';
     }
+    sv('vConnType', typeVal);
+    ss('vConnTypeWarn', typeWarn);
+    if (conn.downlink || conn.rtt) {
+      var dlVal = conn.downlink
+        ? (conn.downlink >= 10 ? '≥ 10 Mbit/s (Browser-Maximum)' : '≈ ' + conn.downlink + ' Mbit/s')
+        : 'Unbekannt';
+      sv('vConnSpeed', dlVal);
+      ss('vConnSpeedSub', conn.rtt ? 'Latenz (RTT): ' + conn.rtt + ' ms  ·  Gerundeter Schätzwert' : '');
+      ss('vConnSpeedWarn', 'Diese Werte sind vom Browser absichtlich ungenau gehalten — der Wert sagt nur ungefähr wie schnell deine Verbindung ist. Für eine echte Messung: openspeedtest.com oder fast.com aufrufen.');
+    } else {
+      sv('vConnSpeed', 'Nicht verfügbar');
+      ss('vConnSpeedSub', 'Browser gibt keine Geschwindigkeitsdaten preis');
+      ss('vConnSpeedWarn', 'Verbindungsgeschwindigkeit und Latenz geben Rückschlüsse auf deinen Anbieter und Standorttyp (Heim- vs. Mobilnetz).');
+    }
+  } else if (isBraveBrowser) {
+    // Brave hat navigator.connection, gibt aber absichtlich keine Daten zurück (Fingerprint-Schutz)
+    sv('vConnType',  '🛡 Blockiert (Brave-Schutz)');
+    ss('vConnTypeWarn', 'Brave Browser blockiert die Network Information API gezielt, um Fingerprinting zu verhindern. Das ist ein Datenschutz-Feature, kein Fehler.');
+    sv('vConnSpeed', '🛡 Blockiert (Brave-Schutz)');
+    ss('vConnSpeedSub', 'Brave schützt dich hier vor Tracking');
+    ss('vConnSpeedWarn', 'In Chrome oder Edge wären Verbindungstyp und Geschwindigkeit sichtbar. Brave verhindert dies absichtlich.');
   } else {
-    sv('vConnType',  'Nicht verfügbar'); ss('vConnTypeWarn',  'Firefox stellt Verbindungsinfos aus Datenschutzgründen nicht bereit.');
+    // Firefox und andere Browser ohne Network Information API
+    sv('vConnType',  'Nicht verfügbar');
+    ss('vConnTypeWarn', 'Dieser Browser stellt die Network Information API aus Datenschutzgründen nicht bereit (z. B. Firefox).');
     sv('vConnSpeed', 'Nicht verfügbar');
+    ss('vConnSpeedSub', 'Browser unterstützt Network Information API nicht');
+    ss('vConnSpeedWarn', 'Firefox und einige andere Browser verzichten bewusst auf diese API, da sie zum Fingerprinting genutzt werden kann.');
   }
 })();
 
@@ -750,11 +952,11 @@ setTimeout(async function() {
     if (hints.length > 0) {
       sv('vVpn', '<span class="badge-warn">⚠ VPN / Proxy wahrscheinlich</span>', true);
       ss('vVpnSub', hints.join('  ·  '));
-      ss('vVpnWarn', 'Mindestens ein Hinweis deutet auf VPN oder Proxy. Hinweis: VPNs mit Server im gleichen Land sind schwerer erkennbar. Ein VPN schützt vor Tracking, macht dich aber nicht vollständig anonym.');
+      ss('vVpnWarn', 'Es sieht aus als ob du ein VPN nutzt. Ein VPN versteckt deinen echten Standort — aber es macht dich nicht unsichtbar. Dein Gerät, dein Browser und dein Verhalten sind weiterhin erkennbar. Ein VPN ist ein gutes Werkzeug, aber kein Allheilmittel.');
     } else if (ipCountry) {
       sv('vVpn', '<span class="badge-ok">✓ Kein eindeutiger Hinweis</span>', true);
       ss('vVpnSub', 'Zeitzone und IP-Land stimmen überein · Kein Hosting-Flag');
-      ss('vVpnWarn', 'Kein Verdacht bedeutet nicht zwingend kein VPN — VPNs mit lokalem Server (z.B. NordVPN DE-Server in Deutschland) sind kaum erkennbar. Diese Methode erkennt nur VPNs mit Server im Ausland oder bekannte Datacenter-IPs.');
+      ss('vVpnWarn', 'Kein VPN erkannt — das bedeutet deine echte IP-Adresse und dein echter Standort sind sichtbar. Wer mehr Privatsphäre möchte, kann ein VPN nutzen. Aber auch ein VPN schützt nicht vor allem — dein Browser-Fingerprint bleibt weiterhin erkennbar.');
     } else {
       sv('vVpn', 'Nicht prüfbar'); ss('vVpnSub', 'Geo-Daten noch nicht verfügbar');
     }
@@ -779,7 +981,7 @@ if (navigator.getBattery) {
       document.getElementById('vBatVis').innerHTML =
         '<div class="bat-visual"><div class="bat-body"><div class="bat-fill ' + cls + '" style="width:' + pct + '%"></div></div>'
         + '<span style="font-size:12px;color:var(--muted)">' + pct + '%</span></div>';
-      ss('vBatWarn', 'Der Batteriestand wurde für sog. Battery-Fingerprinting missbraucht: eine fast leere Batterie ist selten — und macht dich dadurch kurzzeitig einzigartig identifizierbar. Firefox hat diese API deshalb stark eingeschränkt.');
+      ss('vBatWarn', 'Selbst dein Akkustand kann zur Wiedererkennung genutzt werden: Ein Akku bei 23% ist selten genug um dich kurzzeitig eindeutig zu identifizieren. Klingt absurd — wurde aber tatsächlich so eingesetzt.');
     }
     upd();
     bat.addEventListener('levelchange', upd);
@@ -816,7 +1018,7 @@ if (navigator.getBattery) {
   var lblEl = document.getElementById('fpLabel'); if (lblEl) lblEl.textContent = label;
   setTimeout(function() { var f = document.getElementById('fpFill'); if (f) f.style.width = score + '%'; }, 300);
   ss('vFpSub', 'Fingerprint-Score basierend auf messbaren Browser-Merkmalen (0–100)');
-  ss('vFpWarn', 'Browser-Fingerprinting braucht keine Cookies. Die Kombination deiner Geräte-Merkmale macht dich in Millisekunden wiedererkennbar — weltweit, auf jeder Webseite die dieses Verfahren einsetzt. Selbst nach Browser-Reset oder Cookie-Löschung bleibt der Fingerprint gleich.');
+  ss('vFpWarn', 'Cookies kannst du löschen. Den Browser kannst du wechseln. Aber solange du dasselbe Gerät nutzt, bleibst du erkennbar — weil die Kombination aus Gerät, Bildschirm, Grafikkarte und Software so einzigartig ist wie ein Fingerabdruck. Das nennt sich Browser-Fingerprinting, und dagegen gibt es keinen einfachen Schutz.');
 })();
 
 // Wiedererkennungs-Test
@@ -831,11 +1033,11 @@ if (navigator.getBattery) {
       var ago = diff < 60 ? 'vor ' + diff + ' Min.' : diff < 1440 ? 'vor ' + Math.round(diff/60) + ' Std.' : 'vor ' + Math.round(diff/1440) + ' Tagen';
       sv('vStorage', '⚠ Dieses Gerät wurde erkannt!');
       ss('vStorageSub', 'Letzter Besuch: ' + ago + ' (' + prev.toLocaleString('de-DE') + ')');
-      ss('vStorageWarn', 'Webseiten können dich ohne Cookies wiedererkennen — allein über localStorage oder IndexedDB. Diese Daten bleiben bis du deinen Browser-Speicher explizit löschst.');
+      ss('vStorageWarn', 'Du wurdest wiedererkannt — ohne Cookie, ohne Login. Webseiten können eine unsichtbare ID in deinem Browser speichern die bleibt bis du deinen Browser-Speicher manuell löschst. Die meisten Menschen tun das nie.');
     } else {
       sv('vStorage', 'Erstbesuch — ID wird gespeichert');
       ss('vStorageSub', 'Beim nächsten Laden dieser Seite wirst du wiedererkannt!');
-      ss('vStorageWarn', 'Gerade wurde im Hintergrund eine Erkennungs-ID in deinem Browser gespeichert. Lade diese Seite neu — und du siehst wie einfach Wiedererkennung ohne Cookies funktioniert.');
+      ss('vStorageWarn', 'Gerade wurde unsichtbar eine ID in deinem Browser gespeichert. Lade diese Seite neu — und du wirst sofort wiedererkannt, ganz ohne Cookie und ohne dass du irgendetwas getan hast. So funktioniert modernes Tracking.');
     }
     localStorage.setItem(key, now.getTime().toString());
   } catch(e) {
@@ -846,9 +1048,9 @@ if (navigator.getBattery) {
 // Privatsphäre
 var dnt = navigator.doNotTrack || window.doNotTrack;
 sv('vDnt', dnt==='1' ? '✓ Aktiviert (DNT=1)' : dnt==='0' ? '✗ Deaktiviert' : 'Nicht gesetzt');
-ss('vDntWarn', 'Do Not Track ist ein freiwilliger Standard — fast keine Webseite hält sich daran. Er ist kein technischer Schutz, nur eine Absichtserklärung.');
+ss('vDntWarn', '"Bitte verfolge mich nicht" — das ist alles was dieses Signal sagt. Kein Gesetz zwingt Webseiten sich daran zu halten, und die meisten ignorieren es vollständig. Es ist leider wirkungslos.');
 sv('vCookies', navigator.cookieEnabled ? '✓ Aktiviert' : '✗ Deaktiviert');
-ss('vCookiesWarn', 'Cookies werden genutzt um dich zu verfolgen und seitenübergreifend zu tracken. Lösche sie regelmäßig oder nutze uBlock Origin.');
+ss('vCookiesWarn', 'Cookies sind kleine Dateien die Webseiten in deinem Browser speichern — ursprünglich für praktische Dinge wie Warenkörbe. Heute werden sie hauptsächlich genutzt um dich über viele verschiedene Webseiten hinweg zu verfolgen und ein genaues Profil deiner Interessen zu erstellen.');
 sv('vTouch', navigator.maxTouchPoints > 0 ? '✓ Ja · ' + navigator.maxTouchPoints + ' gleichzeitige Punkte' : '✗ Kein Touchscreen erkannt');
 
 // ═══════════════════════════════════════════════════════
@@ -859,13 +1061,13 @@ function applyGeo(ip, city, region, country, cc, lat, lon, isp, asn, isProxy) {
   window._geoIsProxy = isProxy || false;
   sv('vIp', '<div class="ip-badge"><div class="dot"></div>' + ip + '</div>', true);
   ss('vIpSub',  'Protokoll: IPv' + (ip.indexOf(':')>=0 ? '6 (modernes Internet)' : '4'));
-  ss('vIpWarn', 'Deine IP-Adresse verrät deinen ungefähren Standort — oft auf Stadtebene. Jede besuchte Webseite speichert sie automatisch in Server-Logs.');
+  ss('vIpWarn', 'Stell dir vor, du rufst irgendwo an — die andere Seite sieht sofort deine Telefonnummer, auch wenn du nichts sagst. Genau so funktioniert deine IP-Adresse im Internet. Jede Webseite die du öffnest, sieht sie automatisch.');
   sv('vLoc', (city||'?') + ', ' + (region||'?'));
   ss('vLocSub',  (country||'?') + '  ·  ' + Number(lat).toFixed(4) + '°N, ' + Number(lon).toFixed(4) + '°E');
-  ss('vLocWarn', 'Webseiten kennen deine Stadt — ohne dass du jemals einen Standort freigegeben hast. Nur via IP-Adresse.');
+  ss('vLocWarn', 'Du hast nie deinen Standort freigegeben — und trotzdem kennt diese Seite deine Stadt. Möglich macht das allein deine IP-Adresse. Werbefirmen nutzen das um dir lokale Anzeigen zu zeigen, auch ohne GPS.');
   sv('vIsp', isp || '–');
   ss('vIspSub',  asn || '');
-  ss('vIspWarn', 'Dein Internet-Anbieter sieht alle unverschlüsselten Anfragen. Per Vorratsdatenspeicherung werden diese Verbindungsdaten gespeichert.');
+  ss('vIspWarn', 'Dein Internet-Anbieter — also A1, Magenta, Drei oder wer auch immer — sieht jede Webseite die du besuchst. In vielen Ländern ist er gesetzlich verpflichtet diese Daten monatelang zu speichern.');
 }
 
 async function loadGeoIP() {
@@ -901,6 +1103,203 @@ async function loadGeoIP() {
   sv('vLoc', 'Nicht verfügbar'); sv('vIsp', 'Nicht verfügbar');
 }
 
+// ═══════════════════════════════════════════════════════
+// DNS-ANBIETER + DNS-LEAK CHECK
+// ═══════════════════════════════════════════════════════
+
+// Bekannte DNS-Resolver anhand der IP des DNS-Servers identifizieren
+function identifyDnsProvider(ip, hostname) {
+  if (!ip) return null;
+  var h = (hostname || '').toLowerCase();
+  var checks = [
+    { match: function(ip,h) { return /^1\.1\.1\.|^1\.0\.0\./.test(ip) || h.indexOf('cloudflare') >= 0; },
+      name: 'Cloudflare (1.1.1.1)', icon: '🛡', note: 'Datenschutzfreundlich · Keine Logs' },
+    { match: function(ip,h) { return /^8\.8\.8\.|^8\.8\.4\./.test(ip) || h.indexOf('google') >= 0; },
+      name: 'Google (8.8.8.8)', icon: '🔍', note: 'Schnell · Google protokolliert Anfragen' },
+    { match: function(ip,h) { return /^9\.9\.9\./.test(ip) || h.indexOf('quad9') >= 0; },
+      name: 'Quad9 (9.9.9.9)', icon: '🛡', note: 'Datenschutzfreundlich · Malware-Blocking' },
+    { match: function(ip,h) { return /^208\.67\.22[02]\./.test(ip) || h.indexOf('opendns') >= 0; },
+      name: 'OpenDNS (Cisco)', icon: '🔒', note: 'Cisco · Filtering möglich' },
+    { match: function(ip,h) { return /^94\.140\.14\./.test(ip) || h.indexOf('adguard') >= 0; },
+      name: 'AdGuard DNS', icon: '🛡', note: 'Werbung & Tracker blockiert' },
+    { match: function(ip,h) { return h.indexOf('nextdns') >= 0 || h.indexOf('next-dns') >= 0; },
+      name: 'NextDNS', icon: '🛡', note: 'Konfigurierbarer Privacy-DNS' },
+    { match: function(ip,h) { return /^185\.228\.168\.|^185\.228\.169\./.test(ip) || h.indexOf('cleanbrowsing') >= 0; },
+      name: 'CleanBrowsing', icon: '🔒', note: 'Family-Filter DNS' },
+  ];
+  for (var i = 0; i < checks.length; i++) {
+    try { if (checks[i].match(ip, h)) return checks[i]; } catch(e) {}
+  }
+  return null;
+}
+
+async function loadDnsInfo() {
+  sv('vDns', 'Wird ermittelt…');
+  sv('vDnsLeak', 'Wird geprüft…');
+
+  // DNS-over-HTTPS Helfer mit speziellem Accept-Header
+  async function doh(url, ms) {
+    ms = ms || 5000;
+    var c = new AbortController();
+    var t = setTimeout(function() { c.abort(); }, ms);
+    try {
+      var r = await fetch(url, {
+        cache: 'no-store', signal: c.signal,
+        headers: { 'Accept': 'application/dns-json' }
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    } finally { clearTimeout(t); }
+  }
+
+  // Bekannte DNS-Resolver identifizieren
+  function identifyDns(ip) {
+    if (!ip) return null;
+    var known = [
+      { re: /^1\.1\.1\.|^1\.0\.0\./, name: 'Cloudflare (1.1.1.1)', icon: '🛡', note: 'Datenschutzfreundlich · Keine Logs', privacy: true },
+      { re: /^8\.8\.8\.|^8\.8\.4\./, name: 'Google DNS (8.8.8.8)', icon: '🔍', note: 'Schnell · Google protokolliert Anfragen', privacy: false },
+      // Google betreibt viele weitere Resolver-IPs (Anycast-Infrastruktur)
+      { re: /^172\.253\.|^142\.250\.|^142\.251\.|^172\.217\.|^216\.58\.|^74\.125\./, name: 'Google DNS (Infrastruktur)', icon: '🔍', note: 'Google-Netzwerk · Google protokolliert Anfragen', privacy: false },
+      { re: /^9\.9\.9\.|^149\.112\./, name: 'Quad9 (9.9.9.9)', icon: '🛡', note: 'Datenschutzfreundlich · Malware-Blocking', privacy: true },
+      { re: /^208\.67\.22[02]\./, name: 'OpenDNS (Cisco)', icon: '🔒', note: 'Cisco · Filtering möglich', privacy: false },
+      { re: /^94\.140\.14\.|^94\.140\.15\./, name: 'AdGuard DNS', icon: '🛡', note: 'Werbung & Tracker blockiert', privacy: true },
+      { re: /^45\.90\./, name: 'NextDNS', icon: '🛡', note: 'Konfigurierbarer Privacy-DNS', privacy: true },
+      { re: /^103\.86\.96\.|^103\.86\.99\./, name: 'NordVPN DNS', icon: '🛡', note: 'NordVPN eigener Resolver · Kein Logging', privacy: true },
+    ];
+    for (var i = 0; i < known.length; i++) {
+      if (known[i].re.test(ip)) return known[i];
+    }
+    return null;
+  }
+
+  // Zwei unabhängige DoH-Abfragen parallel — für Leak-Check
+  // DNS-Leak-Methodik:
+  // Wir fragen MEHRERE unabhängige DoH-Endpunkte welche IP sie als unseren DNS-Resolver sehen.
+  // Cloudflare DoH → sieht welchen Resolver dein System für cloudflare-dns.com nutzt
+  // ipify → liefert deine öffentliche IP (als Vergleich)
+  // Wichtig: DoH-Anfragen gehen direkt zum jeweiligen Anbieter, NICHT durch deinen DNS-Resolver.
+  // Was zurückkommt ist die IP des Resolvers der die DNS-Anfrage für whoami.cloudflare aufgelöst hat.
+  var leakResults = await Promise.all([
+
+    // Cloudflare: welcher Resolver hat die Anfrage gestellt?
+    doh('https://cloudflare-dns.com/dns-query?name=whoami.cloudflare&type=TXT')
+      .then(function(d) {
+        if (d && d.Answer) {
+          for (var i = 0; i < d.Answer.length; i++) {
+            var v = (d.Answer[i].data || '').replace(/"/g, '').trim();
+            if (v && (v.indexOf('.') >= 0 || v.indexOf(':') >= 0)) return { ip: v, via: 'Cloudflare' };
+          }
+        }
+        return null;
+      }).catch(function() { return null; }),
+
+    // Akamai whoami — unabhängiger dritter Endpunkt
+    doh('https://cloudflare-dns.com/dns-query?name=whoami.akamai.net&type=A')
+      .then(function(d) {
+        if (d && d.Answer) {
+          for (var i = 0; i < d.Answer.length; i++) {
+            var v = (d.Answer[i].data || '').trim();
+            if (v && v.indexOf('.') >= 0) return { ip: v, via: 'Akamai' };
+          }
+        }
+        return null;
+      }).catch(function() { return null; }),
+
+    // Google whoami — über Cloudflare DoH gestellt (nicht Google DoH!)
+    // Gibt die IP zurück die Google als unseren Resolver sieht
+    doh('https://cloudflare-dns.com/dns-query?name=o-o.myaddr.l.google.com&type=TXT')
+      .then(function(d) {
+        if (d && d.Answer) {
+          for (var i = 0; i < d.Answer.length; i++) {
+            var v = (d.Answer[i].data || '').replace(/"/g, '').trim();
+            if (v && (v.indexOf('.') >= 0 || v.indexOf(':') >= 0)) return { ip: v, via: 'Google (via CF)' };
+          }
+        }
+        return null;
+      }).catch(function() { return null; })
+  ]);
+
+  // Duplikate entfernen
+  var resolvers = [];
+  leakResults.forEach(function(r) {
+    if (!r) return;
+    var dup = false;
+    for (var i = 0; i < resolvers.length; i++) { if (resolvers[i].ip === r.ip) { dup = true; break; } }
+    if (!dup) resolvers.push(r);
+  });
+
+  // DNS-Anbieter anzeigen
+  if (resolvers.length > 0) {
+    var main = resolvers[0];
+    var known = identifyDns(main.ip);
+    if (known) {
+      sv('vDns', known.icon + ' ' + known.name);
+      ss('vDnsSub', known.note);
+      var dnsWarnText = 'Bevor du eine Webseite öffnest, fragt dein Browser im Hintergrund nach der Adresse — so wie ein Telefonbuch. Wer dieses "Telefonbuch" betreibt, sieht jede Seite die du je besuchst.';
+      if (!known.privacy) {
+        dnsWarnText += ' ' + known.name + ' protokolliert diese Anfragen. Für mehr Privatsphäre empfiehlt sich ein Wechsel zu Cloudflare (1.1.1.1) oder dem NordVPN-eigenen DNS (103.86.96.100).';
+      } else {
+        dnsWarnText += ' Du nutzt einen datenschutzfreundlichen Anbieter — gut.';
+      }
+      ss('vDnsWarn', dnsWarnText);
+    } else {
+      sv('vDns', '🏠 ' + main.ip);
+      ss('vDnsSub', 'Unbekannter Resolver · Vermutlich ISP oder Router (Fritzbox etc.)');
+      ss('vDnsWarn', 'Dein Internet-Anbieter sieht damit jede Webseite die du besuchst — noch bevor sie lädt. Wer das ändern möchte, kann in den Router-Einstellungen den DNS auf 1.1.1.1 (Cloudflare) oder 9.9.9.9 (Quad9) umstellen. Das ist kostenlos und dauert 2 Minuten.');
+    }
+  } else {
+    sv('vDns', 'Nicht ermittelbar');
+    ss('vDnsSub', 'DoH-Anfragen blockiert oder kein Internet');
+    ss('vDnsWarn', '');
+  }
+
+  // DNS-Leak Auswertung
+  if (resolvers.length === 0) {
+    sv('vDnsLeak', 'Nicht prüfbar');
+    ss('vDnsLeakSub', 'Keine Resolver-Daten verfügbar');
+    ss('vDnsLeakWarn', '');
+    return;
+  }
+
+  // Resolver-Liste anzeigen
+  var listEl = document.getElementById('vDnsLeakList');
+  if (listEl) {
+    listEl.innerHTML = resolvers.map(function(r) {
+      var k = identifyDns(r.ip);
+      var label = k ? k.name : r.ip + ' (unbekannt)';
+      return '<div>▸ ' + label + ' <span style="opacity:.5">via ' + r.via + '</span></div>';
+    }).join('');
+  }
+
+  if (resolvers.length > 1) {
+    sv('vDnsLeak', '⚠ ' + resolvers.length + ' verschiedene Resolver');
+    ss('vDnsLeakSub', 'Inkonsistente DNS-Auflösung erkannt');
+    ss('vDnsLeakWarn', 'Verschiedene DNS-Server antworten auf deine Anfragen. Bei aktivem VPN kann dies ein DNS-Leak sein — dein ISP sieht welche Domains du aufrufst.');
+  } else {
+    var single = resolvers[0];
+    var sKnown = identifyDns(single.ip);
+    var isPrivacy = sKnown && sKnown.privacy;
+    if (isPrivacy) {
+      sv('vDnsLeak', '✓ Kein Leak erkannt');
+      ss('vDnsLeakSub', 'Einheitlicher Privacy-DNS · Konsistent');
+      ss('vDnsLeakWarn', 'Gut — dein Internet-Anbieter kann nicht mitlesen welche Webseiten du besuchst. Deine DNS-Anfragen laufen über einen Anbieter der keine Logs führt.');
+    } else {
+      var isKnownPublic = sKnown && !sKnown.privacy; // Google, OpenDNS etc.
+      var isUnknown = !sKnown;
+      if (isUnknown) {
+        sv('vDnsLeak', '⚠ Unbekannter Resolver · vermutlich ISP');
+        ss('vDnsLeakSub', 'Wahrscheinlich dein Internet-Anbieter oder Router');
+        ss('vDnsLeakWarn', 'Dein Internet-Anbieter sieht jede Webseite die du besuchst. Im Router oder VPN-Programm kann man das auf einen neutralen Anbieter wie 1.1.1.1 oder 9.9.9.9 umstellen.');
+      } else {
+        sv('vDnsLeak', '⚠ Kein Privacy-DNS · ' + sKnown.name);
+        ss('vDnsLeakSub', sKnown.note);
+        ss('vDnsLeakWarn', sKnown.name + ' protokolliert welche Webseiten du besuchst. Für echte Privatsphäre: Im NordVPN-Programm unter Einstellungen → DNS die Adresse 103.86.96.100 eintragen, oder Cloudflare (1.1.1.1) nutzen.');
+      }
+    }
+  }
+}
+
+loadDnsInfo();
 loadGeoIP();
 </script>
 
