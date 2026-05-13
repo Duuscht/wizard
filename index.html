@@ -95,7 +95,7 @@
     <p class="sub">Alle Daten, die dein Browser beim Besuch einer Webseite preisgibt — in Echtzeit.</p>
   </header>
   <div class="vwrap">
-    <div class="vbadge"><strong>v5.4</strong><span>·</span><span>13. Mai 2026</span><span>·</span><span id="vb">...</span></div>
+    <div class="vbadge"><strong>v5.6</strong><span>·</span><span>13. Mai 2026</span><span>·</span><span id="vb">...</span></div>
   </div>
   <div class="ibox">
     <strong>⚠ Was du hier siehst, sieht jede Webseite — ohne dass du etwas tust</strong>
@@ -323,8 +323,10 @@ window.addEventListener('online',  function(){ syncTime(); });
 mkCard('gNet','net','// Netzwerk',      'Deine IP-Adresse',           'vIp',    {wide:true,sub:'vIpSub',warn:'vIpW'});
 mkCard('gNet','net','// Netzwerk',      'IPv4-Adresse',                'vIp4',   {sub:'vIp4Sub',warn:'vIp4W'});
 mkCard('gNet','net','// Netzwerk',      'IPv6-Adresse',                'vIp6',   {sub:'vIp6Sub',warn:'vIp6W'});
-mkCard('gNet','net','// Netzwerk',      'Dual-Stack / Leak-Check',     'vDual',  {wide:true,sub:'vDualSub',warn:'vDualW'});
-mkCard('gNet','net','// Netzwerk',      'WebRTC – lokale IPs',         'vRTC',   {sub:'vRTCSub',warn:'vRTCW'});
+mkCard('gNet','net','// Netzwerk',      'Dual-Stack / IPv6-Leak',      'vDual',  {wide:true,sub:'vDualSub',warn:'vDualW'});
+mkCard('gNet','net','// Netzwerk',      'WebRTC – IP-Leak-Test',       'vRTC',   {wide:true,sub:'vRTCSub',warn:'vRTCW'});
+mkCard('gNet','net','// Netzwerk',      'DNS-Leak-Test',               'vDNS',   {wide:true,sub:'vDNSSub',warn:'vDNSW'});
+mkCard('gNet','net','// Netzwerk',      'VPN / Proxy erkannt?',        'vVpn',   {wide:true,sub:'vVpnSub',warn:'vVpnW'});
 mkCard('gNet','net','// Netzwerk',      'Standort (via IP)',           'vLoc',   {sub:'vLocSub',warn:'vLocW'});
 mkCard('gNet','net','// Netzwerk',      'Internet-Anbieter (ISP)',     'vIsp',   {sub:'vIspSub',warn:'vIspW'});
 mkCard('gBro','bro','// Browser',       'Browser & Version',           'vBro',   {sub:'vEng',warn:'vBroW'});
@@ -583,223 +585,427 @@ sv('vCook',navigator.cookieEnabled?'✓ Aktiviert':'✗ Deaktiviert');
 ss('vCookW','Cookies werden genutzt um dich seitenübergreifend zu tracken. Regelmäßig löschen oder uBlock Origin nutzen.');
 sv('vTouch',navigator.maxTouchPoints>0?'✓ Ja · '+navigator.maxTouchPoints+' Punkte':'✗ Kein Touchscreen');
 
-// ── IPv4 / IPv6 / Dual-Stack / WebRTC ─────────────────────
+// ══════════════════════════════════════════════════════════
+// IP · IPv4 · IPv6 · WebRTC · DNS-Leak · VPN-Erkennung
+// v5.5 — robuste Fallback-Ketten, VPN-Threat-Protection-fest
+// ══════════════════════════════════════════════════════════
 
-// IPv4-only Abfrage
-var _ip4 = null, _ip6 = null, _ip4cc = null, _ip6cc = null;
+var _ip4=null,_ip6=null,_ip4cc=null,_ip6cc=null,_ip4isp=null,_ip6isp=null;
+var _cc=null,_proxy=null,_isp=null,_asn=null;
+var _rtcIp4=[],_rtcIp6=[],_rtcLocal=[];
+var _dualDone=0, _vpnSignals=[];
 
-function fetchIPv4() {
-  // icanhazip liefert reine IP als Text
-  fetch('https://ipv4.icanhazip.com', { cache:'no-store' })
-    .then(function(r){ return r.text(); })
-    .then(function(t){
-      _ip4 = t.trim();
-      sv('vIp4', '<span style="color:var(--accent);letter-spacing:1px">'+_ip4+'</span>', true);
-      ss('vIp4Sub', 'Protokoll: IPv4 · wird von deinem Router / ISP vergeben');
-      ss('vIp4W', 'Deine IPv4-Adresse ist das klassische Identifikationsmerkmal. Sie wird von fast allen Webseiten geloggt.');
-      // Geo für IPv4
-      return fetchJSON('https://ipapi.co/'+_ip4+'/json/');
-    })
-    .then(function(d){
-      if(d&&d.country) { _ip4cc=d.country; }
-      dualCheck();
-    })
-    .catch(function(){
-      sv('vIp4', '⚠ Nicht abrufbar');
-      ss('vIp4Sub', 'IPv4-Endpunkt nicht erreichbar (Blocker / kein IPv4?)');
-      ss('vIp4W', 'Kein IPv4 erkannt — möglicherweise nur IPv6-Verbindung aktiv.');
-      dualCheck();
-    });
+// ── Hilfsfunktion: Text-fetch mit Timeout ─────────────────
+function fetchText(url,ms){
+  ms=ms||6000;
+  return new Promise(function(res,rej){
+    var done=false,t=setTimeout(function(){done=true;rej(new Error('timeout'));},ms);
+    fetch(url,{cache:'no-store'}).then(function(r){
+      if(done)return; if(!r.ok)throw new Error('HTTP '+r.status); return r.text();
+    }).then(function(d){
+      if(done)return; done=true;clearTimeout(t);res((d||'').trim());
+    }).catch(function(e){if(done)return;done=true;clearTimeout(t);rej(e);});
+  });
 }
 
-// IPv6-only Abfrage
-function fetchIPv6() {
-  fetch('https://ipv6.icanhazip.com', { cache:'no-store' })
-    .then(function(r){ return r.text(); })
-    .then(function(t){
-      _ip6 = t.trim();
-      sv('vIp6', '<span style="color:#39ff85;letter-spacing:1px">'+_ip6+'</span>', true);
-      ss('vIp6Sub', 'Protokoll: IPv6 · modernes 128-Bit-Adressformat');
-      ss('vIp6W', 'IPv6-Adressen werden von vielen VPN-Clients NICHT getunnelt — dadurch kann deine echte IP trotz VPN sichtbar sein (IPv6-Leak)!');
-      // Geo für IPv6
-      return fetchJSON('https://ipapi.co/'+encodeURIComponent(_ip6)+'/json/');
-    })
-    .then(function(d){
-      if(d&&d.country) { _ip6cc=d.country; }
-      dualCheck();
-    })
-    .catch(function(){
-      sv('vIp6', '✓ Nicht vorhanden');
-      ss('vIp6Sub', 'IPv6 nicht aktiv oder vom Browser blockiert');
-      ss('vIp6W', 'Kein IPv6 erkannt. Das ist datenschutztechnisch unkritisch — du hast keine zweite IP, die leaken könnte.');
-      dualCheck();
-    });
-}
+// ── VPN-Gesamtbewertung — gewichtete Signale (v5.6) ───────
+// STARKE Signale  → zuverlässige VPN-Hinweise
+// SCHWACHE Signale → Zusatzinfo, kein Alarm allein
+function vpnCheck(){
+  if(!_cc) { sv('vVpn','Wird analysiert…'); ss('vVpnSub','Warte auf Geo-Daten…'); return; }
 
-// Dual-Stack-Auswertung (wird aufgerufen sobald beide Abfragen abgeschlossen sind)
-var _dualDone = 0;
-function dualCheck() {
-  _dualDone++;
-  if (_dualDone < 2) return; // Warten bis beide fertig
-  var both = _ip4 && _ip6;
-  var only4 = _ip4 && !_ip6;
-  var only6 = !_ip4 && _ip6;
-  var landMismatch = both && _ip4cc && _ip6cc && _ip4cc !== _ip6cc;
-
-  if (landMismatch) {
-    sv('vDual', '<span class="bwarn">⚠ IPv6-LEAK WAHRSCHEINLICH!</span>', true);
-    ss('vDualSub', 'IPv4-Land: '+_ip4cc+'  ·  IPv6-Land: '+_ip6cc+' — unterschiedliche Herkunft!');
-    ss('vDualW', 'KRITISCH: Dein VPN schützt offenbar nur IPv4. Die IPv6-Adresse zeigt in ein anderes Land und verrät deinen echten Standort. VPN-Anbieter prüfen und IPv6-Absicherung aktivieren!');
-  } else if (both && _ip4cc && _ip6cc) {
-    sv('vDual', '<span class="bok">✓ Dual-Stack · Kein Leak erkannt</span>', true);
-    ss('vDualSub', 'IPv4 und IPv6 zeigen in dasselbe Land ('+_ip4cc+')');
-    ss('vDualW', 'Beide Protokollstacks sind aktiv und stimmen überein. Trotzdem: Ein VPN mit lokalem Server (z.B. DE→DE) ist so kaum erkennbar.');
-  } else if (only4) {
-    sv('vDual', 'ℹ Nur IPv4 aktiv (Single-Stack)');
-    ss('vDualSub', 'IPv6 nicht vorhanden — kein Dual-Stack-Leak möglich');
-    ss('vDualW', 'Single-Stack IPv4: Du hast keine zweite Protokollebene, über die ein Leak entstehen könnte.');
-  } else if (only6) {
-    sv('vDual', 'ℹ Nur IPv6 aktiv (Single-Stack)');
-    ss('vDualSub', 'IPv4 nicht vorhanden — seltene Konfiguration');
-    ss('vDualW', 'Reines IPv6-Netzwerk. Prüfen ob alle Dienste erreichbar sind.');
-  } else {
-    sv('vDual', '⚠ Keine IP ermittelt');
-    ss('vDualSub', 'Beide Endpunkte nicht erreichbar — Blocker aktiv?');
-    ss('vDualW', 'Beide IP-Endpunkte wurden geblockt. Schutzschild in der Adressleiste für diese Seite deaktivieren.');
-  }
-}
-
-// WebRTC – lokale und externe IPs (beide Protokollversionen)
-(function(){
-  try {
-    var pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-    var found4=[], found6=[], foundLocal=[];
-    pc.createDataChannel('');
-    pc.onicecandidate = function(e){
-      if(!e||!e.candidate||!e.candidate.candidate) {
-        // Abgeschlossen
-        pc.close();
-        var out4 = found4.length ? found4.join('  ·  ') : '–';
-        var out6 = found6.length ? found6.join('  ·  ') : '–';
-        var outL = foundLocal.length ? foundLocal.join('  ·  ') : '–';
-        var display = 'Öffentlich IPv4: '+out4+'\nÖffentlich IPv6: '+out6+'\nLokal: '+outL;
-        sv('vRTC', '<span style="line-height:1.8;font-size:13px">'+
-          'IPv4: <span style="color:var(--accent)">'+out4+'</span><br>'+
-          'IPv6: <span style="color:#39ff85">'+out6+'</span><br>'+
-          'Lokal: <span style="color:var(--warn)">'+outL+'</span></span>', true);
-        ss('vRTCSub', 'Via WebRTC-ICE-Kandidaten ausgelesen');
-        var warn = (found6.length > 0)
-          ? 'WebRTC gibt deine IPv6-Adresse direkt preis — auch wenn du ein VPN nutzt! Lösung: WebRTC in Firefox deaktivieren (about:config → media.peerconnection.enabled = false) oder uBlock Origin nutzen.'
-          : 'WebRTC gibt lokale Netzwerkdaten preis. Kein IPv6-Leak erkannt.';
-        ss('vRTCW', warn);
-        return;
-      }
-      var cand = e.candidate.candidate;
-      // IPv6 global
-      var m6 = cand.match(/([0-9a-f]{1,4}(?::[0-9a-f]{0,4}){5,7})/i);
-      if(m6 && m6[1] !== '::1' && !m6[1].startsWith('fe80') && found6.indexOf(m6[1])<0) found6.push(m6[1]);
-      // IPv4
-      var m4 = cand.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
-      if(m4){
-        var ip=m4[1];
-        if(/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip)){
-          if(foundLocal.indexOf(ip)<0) foundLocal.push(ip);
-        } else {
-          if(found4.indexOf(ip)<0) found4.push(ip);
-        }
-      }
-      // link-local IPv6
-      var ml = cand.match(/(fe80:[0-9a-f:]+)/i);
-      if(ml && foundLocal.indexOf(ml[1])<0) foundLocal.push(ml[1]);
-    };
-    pc.createOffer().then(function(o){ pc.setLocalDescription(o); });
-    // Timeout falls kein end-of-candidates
-    setTimeout(function(){
-      pc.close();
-      if(!document.getElementById('vRTC').textContent||document.getElementById('vRTC').classList.contains('loading')){
-        sv('vRTC','WebRTC blockiert oder keine Kandidaten');
-        ss('vRTCSub','Browser oder Erweiterung verhindert WebRTC-Zugriff — gut für die Privatsphäre!');
-        ss('vRTCW','Kein WebRTC-Leak möglich da blockiert.');
-      }
-    }, 5000);
-  } catch(e) {
-    sv('vRTC','WebRTC nicht verfügbar');
-    ss('vRTCSub','Browser unterstützt RTCPeerConnection nicht');
-  }
-})();
-
-// Beide IP-Abfragen starten
-fetchIPv4();
-fetchIPv6();
-
-// ── IP + Geo ──────────────────────────────────────────────
-var _cc=null, _proxy=null;
-
-function vpnCheck() {
   var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
-  var map={'Europe/Berlin':'DE','Europe/Paris':'FR','Europe/London':'GB','Europe/Madrid':'ES','Europe/Rome':'IT',
-    'Europe/Amsterdam':'NL','Europe/Brussels':'BE','Europe/Vienna':'AT','Europe/Zurich':'CH','Europe/Luxembourg':'LU',
-    'Europe/Warsaw':'PL','Europe/Prague':'CZ','America/New_York':'US','America/Chicago':'US','America/Denver':'US',
-    'America/Los_Angeles':'US','America/Toronto':'CA','Asia/Tokyo':'JP','Asia/Shanghai':'CN','Asia/Kolkata':'IN',
-    'Australia/Sydney':'AU','Europe/Moscow':'RU','Europe/Stockholm':'SE','Europe/Oslo':'NO','Europe/Lisbon':'PT',
-    'Europe/Athens':'GR','Europe/Budapest':'HU','Europe/Bucharest':'RO'};
-  var tzC=map[tz]||null;
-  var hints=[];
-  if(tzC&&_cc&&tzC!==_cc) hints.push('IP-Land ('+_cc+') ≠ Zeitzone ('+tzC+')');
-  if(_proxy===true)        hints.push('IP als Datacenter / Hosting erkannt');
-  if(hints.length>0){
-    sv('vVpn','<span class="bwarn">⚠ VPN / Proxy wahrscheinlich</span>',true);
-    ss('vVpnSub',hints.join('  ·  '));
-    ss('vVpnW','Hinweis erkannt. VPNs mit Server im selben Land (z.B. NordVPN DE→DE) sind kaum erkennbar — das ist der Datenschutzvorteil eines VPNs.');
-  }else if(_cc){
-    sv('vVpn','<span class="bok">✓ Kein eindeutiger Hinweis</span>',true);
-    ss('vVpnSub','Zeitzone und IP-Land stimmen überein · Kein Datacenter-Flag');
-    ss('vVpnW','Kein Verdacht ≠ kein VPN. VPNs mit lokalem Server sind kaum erkennbar. Diese Methode erkennt nur Auslands-VPNs und bekannte Datacenter-IPs.');
-  }else{
-    sv('vVpn','Wird geprüft\u2026'); ss('vVpnSub','Warte auf Geo-Daten\u2026');
+  var tzMap={
+    'Europe/Berlin':'DE','Europe/Paris':'FR','Europe/London':'GB','Europe/Madrid':'ES',
+    'Europe/Rome':'IT','Europe/Amsterdam':'NL','Europe/Brussels':'BE','Europe/Vienna':'AT',
+    'Europe/Zurich':'CH','Europe/Luxembourg':'LU','Europe/Warsaw':'PL','Europe/Prague':'CZ',
+    'America/New_York':'US','America/Chicago':'US','America/Denver':'US','America/Los_Angeles':'US',
+    'America/Toronto':'CA','Asia/Tokyo':'JP','Asia/Shanghai':'CN','Asia/Kolkata':'IN',
+    'Australia/Sydney':'AU','Europe/Moscow':'RU','Europe/Stockholm':'SE','Europe/Oslo':'NO',
+    'Europe/Lisbon':'PT','Europe/Athens':'GR','Europe/Budapest':'HU','Europe/Bucharest':'RO'
+  };
+  // Nachbarländerpaare: Zeitzone≠Land ist hier NORMAL (Grenzpendler, Urlauber)
+  var neighbours={
+    'LU':['DE','FR','BE'],'DE':['LU','AT','CH','FR','NL','BE','PL','CZ'],
+    'FR':['LU','DE','BE','CH','IT','ES'],'BE':['LU','DE','FR','NL'],
+    'NL':['DE','BE'],'AT':['DE','CH'],'CH':['DE','AT','FR','IT'],
+    'IT':['CH','AT','FR'],'ES':['FR'],'PL':['DE','CZ'],'CZ':['DE','AT','PL']
+  };
+
+  var tzC = tzMap[tz] || null;
+  var strongSigs = [], weakSigs = [], infoSigs = [];
+
+  // ── STARKE SIGNALE ────────────────────────────────────────
+  // 1. Datacenter/Hosting-Flag
+  if(_proxy===true)
+    strongSigs.push('🖥 IP aus Datacenter / Hosting-Netz erkannt');
+
+  // 2. ISP-Name enthält bekannten VPN-Anbieter
+  var ispLow=(_isp||'').toLowerCase()+' '+(_asn||'').toLowerCase();
+  var vpnIsps=['nordvpn','expressvpn','surfshark','mullvad','protonvpn','cyberghost',
+    'private internet access','ipvanish','windscribe','hotspot shield','tunnelbear',
+    'clouvider','m247','quadranet','tzulo','datacamp limited','datacamp','leaseweb',
+    'servers.com','vultr','linode','digitalocean','ovh vpn'];
+  var foundVpnIsp='';
+  for(var k=0;k<vpnIsps.length;k++){
+    if(ispLow.indexOf(vpnIsps[k])>=0){foundVpnIsp=vpnIsps[k];break;}
+  }
+  if(foundVpnIsp)
+    strongSigs.push('🔒 ISP/ASN ist bekannter VPN-/Hosting-Anbieter: "'+foundVpnIsp+'"');
+
+  // 3. WebRTC-IP ≠ Geo-IP (eindeutiger Tunnel-Beweis)
+  if(_rtcIp4.length>0&&_ip4&&_rtcIp4.indexOf(_ip4)<0)
+    strongSigs.push('📡 WebRTC-IP ('+_rtcIp4[0]+') ≠ Geo-IP ('+(_ip4||'?')+') → VPN-Tunnel aktiv');
+
+  // 4. IPv6-Leak (IPv4 und IPv6 zeigen verschiedene Länder)
+  if(_ip6&&_ip4&&_ip4cc&&_ip6cc&&_ip4cc!==_ip6cc)
+    strongSigs.push('⚠ IPv6-Leak: IPv4→'+_ip4cc+' aber IPv6→'+_ip6cc+' (echte IP sichtbar!)');
+
+  // 5. Zeitzone ≠ IP-Land — NUR stark wenn kein Nachbarland
+  if(tzC&&_cc&&tzC!==_cc){
+    var nb=neighbours[tzC]||[];
+    if(nb.indexOf(_cc)<0){
+      // Kein Nachbarland → wirklich auffällig
+      strongSigs.push('🌍 IP-Land ('+_cc+') ≠ Zeitzone ('+tzC+') — kein Nachbarland');
+    }else{
+      // Nachbarland (z.B. Merzig/DE mit Zeitzone LU) → nur schwacher Hinweis
+      weakSigs.push('🌍 Zeitzone ('+tzC+') ≠ IP-Land ('+_cc+') — Grenzregion/Nachbarland, kein sicherer VPN-Hinweis');
+    }
+  }
+
+  // ── AUSGABE ───────────────────────────────────────────────
+  var hasStrong = strongSigs.length > 0;
+  var hasWeak   = weakSigs.length > 0;
+
+  if(hasStrong){
+    var allSigs = strongSigs.concat(weakSigs);
+    sv('vVpn','<span class="bwarn">⚠ VPN / Proxy erkannt</span>',true);
+    ss('vVpnSub', allSigs.join('  ·  '));
+    ss('vVpnW',
+      strongSigs.length+' starke'+( strongSigs.length===1?' Signal':' Signale')+' erkannt. '+
+      'VPNs mit Server im selben Land (z.B. NordVPN DE→DE) sind für Webseiten kaum erkennbar — '+
+      'das ist ihr Datenschutzvorteil. Diese Analyse erkennt Auslands-Server, Datacenter-IPs, '+
+      'bekannte VPN-ISP-Namen und WebRTC-Tunnel.'
+    );
+  } else if(hasWeak){
+    sv('vVpn','<span style="color:var(--warn)">ℹ Schwacher Hinweis</span>',true);
+    ss('vVpnSub', weakSigs.join('  ·  '));
+    ss('vVpnW',
+      'Kein starkes VPN-Signal. Der Zeitzone-Hinweis ist typisch für Grenzregionen (z.B. Wohnort DE, '+
+      'Arbeitsort LU) und kein zuverlässiger VPN-Beweis. Datacenter-Flag, ISP-Name und WebRTC '+
+      'zeigen keinen VPN-Tunnel.'
+    );
+  } else {
+    sv('vVpn','<span class="bok">✓ Kein VPN-Hinweis erkannt</span>',true);
+    ss('vVpnSub','Datacenter-Flag: nein · ISP unauffällig · Zeitzone/Land stimmen überein · Kein WebRTC-Tunnel');
+    ss('vVpnW',
+      'Kein Verdacht ≠ kein VPN. Ein VPN mit lokalem Server (z.B. NordVPN DE→DE) '+
+      'ist für Webseiten praktisch nicht erkennbar — das ist beabsichtigt und ein Qualitätsmerkmal.'
+    );
   }
 }
 
+// ── Geo / Haupt-IP ────────────────────────────────────────
 function applyGeo(ip,city,region,country,cc,lat,lon,isp,asn,proxy){
-  _cc=cc; _proxy=proxy||false;
+  _cc=cc;_proxy=proxy||false;_isp=isp;_asn=asn;
   sv('vIp','<div class="ipb"><div class="dot"></div>'+ip+'</div>',true);
-  ss('vIpSub','Protokoll: IPv'+(ip.indexOf(':')>=0?'6 (modernes Internet)':'4'));
-  ss('vIpW','Deine IP-Adresse verrät deinen ungefähren Standort — oft auf Stadtebene. Jede Webseite speichert sie in Server-Logs.');
+  ss('vIpSub','Protokoll: IPv'+(ip.indexOf(':')>=0?'6':'4')+
+    (ip.indexOf(':')>=0?' (modernes Internet)':'')+' · sichtbar für jede Webseite');
+  ss('vIpW','Deine IP-Adresse verrät deinen ungefähren Standort — oft auf Stadtebene. Jede Webseite speichert sie automatisch in Server-Logs, ohne dass du etwas tust.');
   sv('vLoc',(city||'?')+', '+(region||'?'));
-  ss('vLocSub',(country||'?')+'  ·  '+Number(lat).toFixed(4)+'°N, '+Number(lon).toFixed(4)+'°E');
-  ss('vLocW','Webseiten kennen deine Stadt — ohne dass du einen Standort freigegeben hast. Nur via IP-Adresse.');
-  sv('vIsp',isp||'–'); ss('vIspSub',asn||'');
-  ss('vIspW','Dein Internet-Anbieter sieht alle unverschlüsselten Anfragen. Per Vorratsdatenspeicherung werden Verbindungsdaten gespeichert.');
+  ss('vLocSub',(country||'?')+'  ·  Lat '+Number(lat).toFixed(4)+'° / Lon '+Number(lon).toFixed(4)+'°');
+  ss('vLocW','Webseiten kennen deine Stadt ohne GPS-Zugriff — nur anhand der IP-Adresse. Radius typisch 5–50 km.');
+  sv('vIsp',isp||'–');ss('vIspSub',asn||'');
+  ss('vIspW','Dein Internetanbieter sieht alle unverschlüsselten Verbindungen. Per Vorratsdatenspeicherung werden Verbindungsdaten bis zu 10 Wochen gespeichert.');
   vpnCheck();
 }
 
 function geoError(){
-  sv('vIp','⚠ IP nicht abrufbar');
-  ss('vIpSub','Tipp: Schutz-Schild in der Adressleiste → für diese Seite deaktivieren');
-  sv('vLoc','Nicht verfügbar'); sv('vIsp','Nicht verfügbar'); vpnCheck();
+  sv('vIp','⚠ IP nicht ermittelbar');
+  ss('vIpSub','Alle Geo-Dienste blockiert — möglicherweise VPN-Schutzfilter aktiv');
+  ss('vIpW','NordVPN Threat Protection und ähnliche Filter können IP-Erkennungsdienste blockieren. Die WebRTC-Karte zeigt trotzdem die tatsächliche IP.');
+  sv('vLoc','Nicht verfügbar');sv('vIsp','Nicht verfügbar');vpnCheck();
 }
 
-// Geo laden — JSONP zuerst (kein CORS), dann fetch-Fallbacks
+// Geo-Fallback-Kette (4 Dienste — VPN-robust)
 jsonp('https://ip-api.com/json/?fields=status,query,city,regionName,country,countryCode,lat,lon,isp,as,proxy,hosting','callback','_g1')
 .then(function(d){
   if(d&&d.status==='success'){applyGeo(d.query,d.city,d.regionName,d.country,d.countryCode,d.lat,d.lon,d.isp,d.as,d.proxy||d.hosting);return;}
   throw new Error('bad');
 }).catch(function(){
   return jsonp('https://ipinfo.io/json','callback','_g2').then(function(d){
-    if(d&&d.ip){var p=d.loc?d.loc.split(',').map(Number):[0,0];applyGeo(d.ip,d.city||'?',d.region||'?',d.country||'?',d.country||'',p[0],p[1],d.org||'','',false);return;}
+    if(d&&d.ip){var p=d.loc?d.loc.split(',').map(Number):[0,0];
+      applyGeo(d.ip,d.city||'?',d.region||'?',d.country||'?',d.country||'',p[0],p[1],d.org||'','',false);return;}
     throw new Error('bad');
   });
 }).catch(function(){
   return fetchJSON('https://ipwho.is/').then(function(d){
-    if(d&&d.ip&&d.success!==false){applyGeo(d.ip,d.city,d.region,d.country,d.country_code,d.latitude,d.longitude,(d.connection&&d.connection.isp)||d.org||'',d.connection&&d.connection.asn?'AS'+d.connection.asn:'',false);return;}
+    if(d&&d.ip&&d.success!==false){
+      applyGeo(d.ip,d.city,d.region,d.country,d.country_code,d.latitude,d.longitude,
+        (d.connection&&d.connection.isp)||d.org||'',d.connection&&d.connection.asn?'AS'+d.connection.asn:'',false);return;}
     throw new Error('bad');
   });
 }).catch(function(){
   return fetchJSON('https://ipapi.co/json/').then(function(d){
-    if(d&&d.ip&&!d.error){applyGeo(d.ip,d.city,d.region,d.country_name,d.country,d.latitude,d.longitude,d.org||'',d.asn||'',false);return;}
+    if(d&&d.ip&&!d.error){
+      applyGeo(d.ip,d.city,d.region,d.country_name,d.country,d.latitude,d.longitude,d.org||'',d.asn||'',false);return;}
     throw new Error('bad');
   });
 }).catch(function(){ geoError(); });
+
+// ── IPv4 — Fallback-Kette ─────────────────────────────────
+// Mehrere Dienste, da VPN-Filter einzelne blockiert
+(function(){
+  var sources=[
+    function(){return fetchText('https://api4.my-ip.io/ip');},
+    function(){return fetchText('https://ipv4.wtfismyip.com/text');},
+    function(){return fetchJSON('https://ipapi.co/json/').then(function(d){if(d&&d.ip&&!d.error&&d.ip.indexOf(':')<0)return d.ip;throw new Error('no v4');});},
+    function(){return fetchJSON('https://ipwho.is/').then(function(d){if(d&&d.ip&&d.ip.indexOf(':')<0)return d.ip;throw new Error('no v4');});}
+  ];
+  var i=0;
+  function next(){
+    if(i>=sources.length){
+      // Letzter Ausweg: WebRTC-Ergebnis übernehmen
+      setTimeout(function(){
+        if(!_ip4){
+          if(_rtcIp4.length>0){
+            _ip4=_rtcIp4[0];
+            sv('vIp4','<span style="color:var(--accent);letter-spacing:1px">'+_ip4+'</span> <span style="font-size:11px;color:var(--muted)">(via WebRTC)</span>',true);
+            ss('vIp4Sub','Via WebRTC ermittelt — direkte Anfragen durch VPN-Filter blockiert');
+            ss('vIp4W','IPv4 konnte nur über WebRTC ermittelt werden. Das zeigt, dass VPN-Schutzfilter aktiv externe IP-Dienste blockieren.');
+          }else{
+            sv('vIp4','⚠ Nicht ermittelbar');
+            ss('vIp4Sub','Alle IPv4-Dienste durch Filter blockiert · VPN aktiv?');
+            ss('vIp4W','NordVPN Threat Protection blockiert externe IP-Erkennungsdienste. Das ist eine Schutzfunktion, verhindert aber diese Diagnose.');
+          }
+          _dualDone++;if(_dualDone>=2)dualCheck();
+        }
+      },6500);
+      return;
+    }
+    sources[i++]().then(function(ip){
+      ip=(ip||'').trim();
+      if(!ip||ip.indexOf('.')<0){next();return;}
+      _ip4=ip;
+      sv('vIp4','<span style="color:var(--accent);letter-spacing:1px">'+ip+'</span>',true);
+      ss('vIp4Sub','Protokoll: IPv4 · klassisches 32-Bit-Format · von Router / ISP vergeben');
+      ss('vIp4W','IPv4 ist das Haupt-Identifikationsmerkmal im Internet. Jede Webseite sieht und speichert sie.');
+      // Geo-Check für VPN-Erkennung
+      fetchJSON('https://ipapi.co/'+ip+'/json/').then(function(d){
+        if(d&&d.country)_ip4cc=d.country;
+        _dualDone++;if(_dualDone>=2)dualCheck();vpnCheck();
+      }).catch(function(){_dualDone++;if(_dualDone>=2)dualCheck();});
+    }).catch(function(){next();});
+  }
+  next();
+})();
+
+// ── IPv6 — Fallback-Kette ─────────────────────────────────
+(function(){
+  var sources=[
+    function(){return fetchText('https://api6.my-ip.io/ip');},
+    function(){return fetchText('https://ipv6.wtfismyip.com/text');},
+    function(){return fetchJSON('https://ipapi.co/json/').then(function(d){if(d&&d.ip&&d.ip.indexOf(':')>=0)return d.ip;throw new Error('no v6');});}
+  ];
+  var i=0;
+  function next(){
+    if(i>=sources.length){
+      // IPv6 via WebRTC?
+      setTimeout(function(){
+        if(!_ip6){
+          if(_rtcIp6.length>0){
+            _ip6=_rtcIp6[0];
+            sv('vIp6','<span style="color:#39ff85;letter-spacing:1px;font-size:13px">'+_ip6+'</span> <span style="font-size:11px;color:var(--muted)">(via WebRTC)</span>',true);
+            ss('vIp6Sub','Via WebRTC ermittelt — Achtung: IPv6-Leak möglich!');
+            ss('vIp6W','WARNUNG: Deine IPv6-Adresse ist via WebRTC sichtbar. Falls ein VPN aktiv ist, könnte dies deine echte IP verraten!');
+          }else{
+            sv('vIp6','<span class="bok">✓ Kein IPv6 aktiv</span>',true);
+            ss('vIp6Sub','Kein IPv6 erkannt — kein IPv6-Leak möglich');
+            ss('vIp6W','Ohne aktives IPv6 gibt es keine zweite Protokollebene, über die ein Leak entstehen kann. Datenschutztechnisch unkritisch.');
+          }
+          _dualDone++;if(_dualDone>=2)dualCheck();
+        }
+      },6500);
+      return;
+    }
+    sources[i++]().then(function(ip){
+      ip=(ip||'').trim();
+      if(!ip||ip.indexOf(':')<0){next();return;}
+      _ip6=ip;
+      sv('vIp6','<span style="color:#39ff85;letter-spacing:1px;font-size:13px">'+ip+'</span>',true);
+      ss('vIp6Sub','Protokoll: IPv6 · 128-Bit-Adresse · modernes Internet');
+      ss('vIp6W','IPv6-Adressen werden von vielen VPN-Clients NICHT getunnelt — deine echte IPv6-IP kann trotz VPN sichtbar sein (IPv6-Leak)!');
+      fetchJSON('https://ipapi.co/'+encodeURIComponent(ip)+'/json/').then(function(d){
+        if(d&&d.country)_ip6cc=d.country;
+        _dualDone++;if(_dualDone>=2)dualCheck();vpnCheck();
+      }).catch(function(){_dualDone++;if(_dualDone>=2)dualCheck();});
+    }).catch(function(){next();});
+  }
+  next();
+})();
+
+// ── Dual-Stack / IPv6-Leak-Auswertung ────────────────────
+function dualCheck(){
+  var both=_ip4&&_ip6, only4=_ip4&&!_ip6, only6=!_ip4&&_ip6;
+  var landLeak=both&&_ip4cc&&_ip6cc&&_ip4cc!==_ip6cc;
+  var ispLeak=both&&_ip4isp&&_ip6isp&&_ip4isp!==_ip6isp;
+
+  if(landLeak){
+    sv('vDual','<span class="bwarn">🚨 IPv6-LEAK ERKANNT!</span>',true);
+    ss('vDualSub','IPv4 → '+_ip4+' ('+_ip4cc+')  ·  IPv6 → '+_ip6+' ('+_ip6cc+') — VERSCHIEDENE LÄNDER!');
+    ss('vDualW','KRITISCH: Dein VPN schützt nur IPv4. Die IPv6-Adresse zeigt dein echtes Heimatland und verrät deinen Standort trotz VPN. Lösung: VPN mit IPv6-Unterstützung nutzen oder IPv6 im Router/OS deaktivieren.');
+  }else if(both&&_ip4cc&&_ip6cc){
+    sv('vDual','<span class="bok">✓ Dual-Stack aktiv · Kein Land-Mismatch</span>',true);
+    ss('vDualSub','IPv4 ('+_ip4+') und IPv6 ('+_ip6+') zeigen beide in: '+_ip4cc);
+    ss('vDualW','Beide Protokolle zeigen dasselbe Land. Trotzdem: Sind es dieselben IPs wie ohne VPN? Ein lokaler VPN-Server (z.B. DE→DE) ist kaum erkennbar.');
+  }else if(only4){
+    sv('vDual','<span class="bok">✓ Nur IPv4 aktiv (Single-Stack)</span>',true);
+    ss('vDualSub','Kein IPv6 vorhanden — kein Dual-Stack-Leak möglich');
+    ss('vDualW','Single-Stack IPv4: Kein zweites Protokoll, über das ein Leak entstehen kann.');
+  }else if(only6){
+    sv('vDual','ℹ Nur IPv6 aktiv (Single-Stack)');
+    ss('vDualSub','Kein IPv4 erkannt — seltene Konfiguration');
+    ss('vDualW','Reines IPv6-Netzwerk. Alle Dienste sollten trotzdem erreichbar sein.');
+  }else{
+    sv('vDual','⚠ Keine IP ermittelt — Filter aktiv?');
+    ss('vDualSub','WebRTC-Karte zeigt die tatsächlichen IPs (falls WebRTC nicht blockiert)');
+    ss('vDualW','Alle IP-Dienste wurden geblockt. Das kann auf VPN-Schutzfilter hinweisen. WebRTC-Ergebnis weiter unten ist aussagekräftiger.');
+  }
+  vpnCheck();
+}
+
+// ── WebRTC – IP-Leak-Test ─────────────────────────────────
+(function(){
+  try{
+    var iceServers=[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun.cloudflare.com:3478'},
+      {urls:'stun:stun.nextcloud.com:443'}
+    ];
+    var pc=new RTCPeerConnection({iceServers:iceServers});
+    var done=false;
+    pc.createDataChannel('');
+    pc.onicecandidate=function(e){
+      if(!e||!e.candidate||!e.candidate.candidate){
+        if(!done){done=true;pc.close();renderRTC();}
+        return;
+      }
+      var c=e.candidate.candidate;
+      // IPv4
+      var m4=c.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+      if(m4){
+        var ip4=m4[1];
+        if(/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip4)){
+          if(_rtcLocal.indexOf(ip4)<0)_rtcLocal.push(ip4);
+        }else{
+          if(_rtcIp4.indexOf(ip4)<0)_rtcIp4.push(ip4);
+        }
+      }
+      // IPv6 global
+      var m6=c.match(/\b([0-9a-f]{1,4}(?::[0-9a-f]{0,4}){3,7})\b/i);
+      if(m6&&m6[1]!=='::1'&&!/^fe80/i.test(m6[1])&&_rtcIp6.indexOf(m6[1])<0)_rtcIp6.push(m6[1]);
+      // link-local
+      var ml=c.match(/(fe80:[0-9a-f:%]+)/i);
+      if(ml&&_rtcLocal.indexOf(ml[1])<0)_rtcLocal.push(ml[1]);
+    };
+    pc.createOffer().then(function(o){pc.setLocalDescription(o);});
+    setTimeout(function(){if(!done){done=true;try{pc.close();}catch(e){}renderRTC();}},5000);
+
+    function renderRTC(){
+      var o4=_rtcIp4.length?_rtcIp4.join('  ·  '):'–';
+      var o6=_rtcIp6.length?_rtcIp6.join('<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'):'–';
+      var oL=_rtcLocal.length?_rtcLocal.join('  ·  '):'–';
+      var hasLeak=_rtcIp4.length>0||_rtcIp6.length>0;
+      var ip6Warn=_rtcIp6.length>0;
+
+      sv('vRTC',
+        '<div style="line-height:2;font-size:13px">'+
+        '<span style="color:var(--muted);font-size:11px">Öffentl. IPv4: </span>'+
+        '<span style="color:var(--accent)">'+o4+'</span><br>'+
+        '<span style="color:var(--muted);font-size:11px">Öffentl. IPv6: </span>'+
+        '<span style="color:'+(ip6Warn?'#ff4d6d':'#39ff85')+'">'+o6+'</span><br>'+
+        '<span style="color:var(--muted);font-size:11px">Lokal (LAN):&nbsp;&nbsp; </span>'+
+        '<span style="color:var(--warn)">'+oL+'</span>'+
+        '</div>',true);
+      ss('vRTCSub', hasLeak
+        ? (ip6Warn?'⚠ IPv6 via WebRTC sichtbar — möglicher VPN-Leak!':'WebRTC gibt öffentliche IP preis')
+        : 'WebRTC blockiert oder keine öffentlichen IPs sichtbar');
+      ss('vRTCW', ip6Warn
+        ? 'WARNUNG: Deine IPv6-Adresse ist via WebRTC sichtbar — auch wenn ein VPN aktiv ist! Lösung: Firefox → about:config → media.peerconnection.enabled = false  oder  uBlock Origin (WebRTC-Leak-Schutz aktivieren).'
+        : _rtcIp4.length>0
+          ? 'WebRTC gibt deine öffentliche IPv4 preis. Vergleiche mit der Geo-IP oben — unterschiedlich = VPN aktiv. Zum Schutz: uBlock Origin → WebRTC-Leak-Schutz.'
+          : 'Kein WebRTC-Leak erkennbar. Browser oder Erweiterung blockiert WebRTC-Zugriff erfolgreich.');
+      vpnCheck();
+    }
+  }catch(e){
+    sv('vRTC','WebRTC nicht verfügbar');
+    ss('vRTCSub','Browser unterstützt RTCPeerConnection nicht');
+    ss('vRTCW','Kein WebRTC-Leak möglich — API nicht vorhanden.');
+  }
+})();
+
+// ── DNS-Leak-Test ─────────────────────────────────────────
+// Strategie: Zwei Anfragen an DNS-Leak-APIs; Resolver-IP mit ISP vergleichen
+(function(){
+  sv('vDNS','Wird analysiert…');ss('vDNSSub','DNS-Anfragen werden geprüft…');
+
+  // Primär: dnsleaktest.com API (gibt Resolver-IPs zurück)
+  fetchJSON('https://bash.ws/dnsleak/test/'+Math.floor(Math.random()*1e9)+'?json',8000)
+  .then(function(data){
+    if(!data||!Array.isArray(data)||data.length===0)throw new Error('empty');
+    var resolvers=data.filter(function(d){return d&&d.ip;});
+    if(resolvers.length===0)throw new Error('no resolvers');
+    renderDNS(resolvers);
+  }).catch(function(){
+    // Fallback: ipleak.net
+    fetchJSON('https://ipleak.net/json/',8000).then(function(d){
+      if(d&&d.ip){
+        renderDNS([{ip:d.ip,country_name:d.country_name||'?',isp:d.isp||d.org||'?'}]);
+      }else{
+        dnsError();
+      }
+    }).catch(function(){dnsError();});
+  });
+
+  function renderDNS(resolvers){
+    var ispMatch=true, foreign=[], resolverIspNames=[];
+    resolvers.forEach(function(r){
+      var rIsp=(r.isp||r.org||r.country_name||'').toLowerCase();
+      resolverIspNames.push((r.ip||'')+(r.country_name?' ('+r.country_name+')':'')+(r.isp?' · '+r.isp:''));
+      // Prüfen ob Resolver aus fremdem Land
+      if(r.country_code&&_cc&&r.country_code!==_cc)foreign.push(r.country_code);
+      // Prüfen ob Resolver-ISP ≠ Verbindungs-ISP (Hinweis auf eigenen DNS)
+      if(_isp&&rIsp&&_isp.toLowerCase().indexOf(rIsp.split(' ')[0])<0)ispMatch=false;
+    });
+
+    var isLeak=false, leakReason='';
+    // DNS-Leak: Resolver zeigt andere ISP als Verbindungs-ISP, OHNE dass VPN erkannt wurde
+    if(!ispMatch&&_cc&&foreign.length===0&&!_proxy){
+      isLeak=true;leakReason='DNS-Resolver-ISP weicht von Verbindungs-ISP ab';
+    }
+
+    sv('vDNS',
+      '<div style="font-size:13px;line-height:1.9">'+
+      resolverIspNames.map(function(s){return '<span style="color:var(--accent2)">▸</span> '+s;}).join('<br>')+
+      '</div>',true);
+    ss('vDNSSub',
+      resolvers.length+' DNS-Resolver erkannt'+(foreign.length>0?' · Fremdland: '+foreign.join(', '):''));
+
+    if(isLeak){
+      ss('vDNSW','⚠ DNS-Leak möglich: Deine DNS-Anfragen gehen an einen anderen Anbieter als deinen VPN/ISP. Dritte können sehen, welche Domains du aufrufst. Lösung: Im VPN-Client DNS-Leak-Schutz aktivieren oder einen verschlüsselten DNS-Dienst nutzen (DoH/DoT, z.B. Cloudflare 1.1.1.1 oder Quad9).');
+    }else if(foreign.length>0){
+      ss('vDNSW','DNS-Resolver aus Ausland erkannt — kann normal sein wenn VPN aktiv oder Custom-DNS (Cloudflare, Quad9) konfiguriert ist.');
+    }else{
+      ss('vDNSW','DNS-Resolver stimmt mit Verbindungsland überein. Kein offensichtlicher DNS-Leak. Für maximale Sicherheit: DNS-over-HTTPS (DoH) in Firefox aktivieren unter Einstellungen → Verbindung → DNS über HTTPS.');
+    }
+  }
+
+  function dnsError(){
+    sv('vDNS','⚠ DNS-Test nicht durchführbar');
+    ss('vDNSSub','DNS-Leak-Dienste nicht erreichbar — möglicherweise VPN-Filter');
+    ss('vDNSW','Der DNS-Leak-Test wurde durch Filter blockiert. NordVPN Threat Protection blockiert bekannte Test-Dienste. Manuell prüfen: dnsleaktest.com oder ipleak.net im Browser aufrufen.');
+  }
+})();
 </script>
 
 </body>
