@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Was weiß das Internet über dich?</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#050a0f;--panel:#0a1520;--border:#0d2a3a;--accent:#00c8ff;--accent2:#ff4d6d;--accent3:#39ff85;--warn:#ffb347;--text:#c8e6f0;--muted:#4a7a8a;--mono:'Share Tech Mono',monospace;--sans:'Syne',sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,200,255,.03)1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+  .container{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  .vwrap{text-align:center;margin-bottom:28px}
+  .vbadge{display:inline-flex;align-items:center;gap:10px;background:rgba(0,200,255,.06);border:1px solid rgba(0,200,255,.15);border-radius:3px;padding:5px 14px;font-size:10px;letter-spacing:2px;color:var(--muted)}
+  .vbadge strong{color:var(--accent)}
+  header{text-align:center;margin-bottom:16px}
+  .hlabel{font-size:11px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;opacity:.7}
+  h1{font-family:var(--sans);font-size:clamp(28px,5vw,52px);font-weight:800;color:#fff;line-height:1.1;margin-bottom:12px}
+  h1 span{color:var(--accent)}
+  .sub{font-size:13px;color:var(--muted);letter-spacing:1px;margin-bottom:20px}
+  .ibox{background:rgba(255,179,71,.05);border:1px solid rgba(255,179,71,.2);border-left:3px solid var(--warn);border-radius:4px;padding:18px 22px;margin-bottom:32px}
+  .ibox strong{color:var(--warn);font-size:12px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px}
+  .ibox p{font-size:12px;color:#c8b89a;line-height:1.8}
+  .clk{background:var(--panel);border:1px solid var(--border);border-top:2px solid var(--accent);border-radius:4px;padding:32px;margin-bottom:32px;display:flex;align-items:center;gap:48px;flex-wrap:wrap;justify-content:center;position:relative}
+  .clk::before{content:'LIVE · INTERNET-SYNC';position:absolute;top:10px;right:16px;font-size:10px;letter-spacing:3px;color:var(--accent3)}
+  canvas#clkCvs{display:block;filter:drop-shadow(0 0 12px rgba(0,200,255,.4))}
+  .clkd{text-align:center}
+  .tdisp{font-family:var(--mono);font-size:clamp(38px,6vw,64px);color:#fff;letter-spacing:4px;line-height:1;text-shadow:0 0 30px rgba(0,200,255,.5);transition:opacity .5s}
+  .ddisp{font-size:14px;color:var(--accent);letter-spacing:3px;margin-top:10px;text-transform:uppercase}
+  .tzdisp{font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:6px}
+  .syncs{font-size:10px;letter-spacing:2px;margin-top:10px;padding:4px 10px;border-radius:2px;display:inline-block}
+  .syncs.on{background:rgba(57,255,133,.1);color:var(--accent3);border:1px solid rgba(57,255,133,.3)}
+  .syncs.off{background:rgba(255,77,109,.1);color:var(--accent2);border:1px solid rgba(255,77,109,.3);animation:blink 1s step-end infinite}
+  .syncs.ing{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.3)}
+  @keyframes blink{50%{opacity:.3}}
+  .stitle{margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+  .stitle::before,.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+  .stitle span{font-size:10px;letter-spacing:4px;text-transform:uppercase;white-space:nowrap;padding:0 4px}
+  .stitle.net span{color:var(--accent)}.stitle.bro span{color:#a78bfa}.stitle.dev span{color:var(--accent3)}
+  .stitle.scr span{color:#fbbf24}.stitle.con span{color:#22d3ee}.stitle.fpr span{color:#f97316}.stitle.prv span{color:var(--accent2)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:20px 24px;position:relative;overflow:hidden;transition:border-color .3s;opacity:0;transform:translateY(16px);animation:rc .5s forwards}
+  @keyframes rc{to{opacity:1;transform:translateY(0)}}
+  .card:hover{border-color:rgba(0,200,255,.25)}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+  .card.net::before{background:var(--accent)}.card.bro::before{background:#a78bfa}.card.dev::before{background:var(--accent3)}
+  .card.scr::before{background:#fbbf24}.card.con::before{background:#22d3ee}.card.fpr::before{background:#f97316}.card.prv::before{background:var(--accent2)}
+  .clbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;opacity:.5}
+  .card.net .clbl{color:var(--accent)}.card.bro .clbl{color:#a78bfa}.card.dev .clbl{color:var(--accent3)}
+  .card.scr .clbl{color:#fbbf24}.card.con .clbl{color:#22d3ee}.card.fpr .clbl{color:#f97316}.card.prv .clbl{color:var(--accent2)}
+  .ctit{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px}
+  .cval{font-size:16px;color:#fff;word-break:break-all;line-height:1.4}
+  .cval.loading{color:var(--muted);animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
+  .csub{font-size:11px;color:var(--muted);margin-top:4px}
+  .csub2{font-size:11px;color:var(--muted);margin-top:2px}
+  .cwarn{font-size:10px;color:var(--warn);margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,179,71,.15);line-height:1.6}
+  .cwarn:not(:empty)::before{content:'⚠  '}
+  .card.wide{grid-column:1/-1}
+  .ipb{display:inline-flex;align-items:center;gap:10px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);border-radius:3px;padding:8px 16px;font-size:22px;color:var(--accent);letter-spacing:2px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);box-shadow:0 0 8px var(--accent3);animation:dp 2s ease-in-out infinite;flex-shrink:0}
+  @keyframes dp{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+  .fpw{margin-top:8px;display:flex;align-items:center;gap:16px}
+  .fpn{font-size:44px;color:#f97316;letter-spacing:2px;line-height:1}
+  .fpr2{flex:1}
+  .fplbl{font-size:11px;color:var(--muted);margin-bottom:6px}
+  .fpbar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+  .fpfill{height:100%;border-radius:3px;background:linear-gradient(90deg,#22d3ee,#f97316,#ff4d6d);width:0;transition:width 1.5s cubic-bezier(.25,1,.5,1)}
+  .batv{display:inline-flex;align-items:center;gap:8px;margin-top:6px}
+  .batb{width:44px;height:20px;border:2px solid var(--muted);border-radius:3px;position:relative}
+  .batb::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:4px;height:9px;background:var(--muted);border-radius:0 2px 2px 0}
+  .batf{position:absolute;left:2px;top:2px;bottom:2px;border-radius:2px;background:var(--accent3);transition:width .5s}
+  .batf.low{background:var(--accent2)}.batf.mid{background:var(--warn)}
+  .bwarn{display:inline-block;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--accent2);border-radius:3px;padding:3px 10px;font-size:12px}
+  .bok{display:inline-block;background:rgba(57,255,133,.1);border:1px solid rgba(57,255,133,.3);color:var(--accent3);border-radius:3px;padding:3px 10px;font-size:12px}
+  .card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.12s}
+  .card:nth-child(4){animation-delay:.16s}.card:nth-child(5){animation-delay:.20s}.card:nth-child(6){animation-delay:.24s}
+  .card:nth-child(7){animation-delay:.28s}.card:nth-child(8){animation-delay:.32s}.card:nth-child(9){animation-delay:.36s}
+  .card:nth-child(10){animation-delay:.40s}.card:nth-child(11){animation-delay:.44s}.card:nth-child(12){animation-delay:.48s}
+  .card:nth-child(13){animation-delay:.52s}.card:nth-child(14){animation-delay:.56s}.card:nth-child(15){animation-delay:.60s}
+  .card:nth-child(16){animation-delay:.64s}.card:nth-child(17){animation-delay:.68s}.card:nth-child(18){animation-delay:.72s}
+  .card:nth-child(19){animation-delay:.76s}.card:nth-child(20){animation-delay:.80s}.card:nth-child(21){animation-delay:.84s}
+  .card:nth-child(22){animation-delay:.88s}.card:nth-child(23){animation-delay:.92s}.card:nth-child(24){animation-delay:.96s}
+  footer{text-align:center;margin-top:56px;font-size:11px;color:var(--muted);letter-spacing:2px;line-height:2}
+  @media(max-width:600px){.clk{gap:24px;padding:20px 16px}.tdisp{font-size:36px}canvas#clkCvs{width:140px!important;height:140px!important}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="hlabel">// Daten-Transparenz-Report</div>
+    <h1>Was weiß das<br><span>Internet über dich?</span></h1>
+    <p class="sub">Alle Daten, die dein Browser beim Besuch einer Webseite preisgibt — in Echtzeit.</p>
+  </header>
+  <div class="vwrap">
+    <div class="vbadge"><strong>v5.4</strong><span>·</span><span>13. Mai 2026</span><span>·</span><span id="vb">...</span></div>
+  </div>
+  <div class="ibox">
+    <strong>⚠ Was du hier siehst, sieht jede Webseite — ohne dass du etwas tust</strong>
+    <p>Jedes Mal wenn du eine Webseite öffnest, sendet dein Browser automatisch diese Informationen. Du musst nichts anklicken, nichts herunterladen, nichts erlauben. Diese Daten sind für jeden Webseitenbetreiber sichtbar — ohne dein Wissen. Apps auf deinem Smartphone können noch viel mehr: Kamera, Mikrofon, Kontakte, Standortverlauf. Überlege deshalb zweimal, bevor du eine unbekannte App installierst oder auf einen Link in WhatsApp, SMS oder E-Mail klickst.</p>
+  </div>
+  <div class="clk">
+    <canvas id="clkCvs" width="180" height="180"></canvas>
+    <div class="clkd">
+      <div class="tdisp" id="tDisp">--:--:--</div>
+      <div class="ddisp" id="dDisp">Synchronisiere...</div>
+      <div class="tzdisp" id="tzDisp"></div>
+      <div class="syncs ing" id="syncSt">⟳ Verbinde mit Zeitserver...</div>
+    </div>
+  </div>
+  <div class="stitle net"><span>// 01 · Netzwerk &amp; Standort</span></div><div class="grid" id="gNet"></div>
+  <div class="stitle bro"><span>// 02 · Browser &amp; Sprache</span></div><div class="grid" id="gBro"></div>
+  <div class="stitle dev"><span>// 03 · Gerät &amp; Betriebssystem</span></div><div class="grid" id="gDev"></div>
+  <div class="stitle scr"><span>// 04 · Bildschirm &amp; Hardware</span></div><div class="grid" id="gScr"></div>
+  <div class="stitle con"><span>// 05 · Verbindung &amp; Geschwindigkeit</span></div><div class="grid" id="gCon"></div>
+  <div class="stitle fpr"><span>// 06 · Browser-Fingerprint</span></div><div class="grid" id="gFpr"></div>
+  <div class="stitle prv"><span>// 07 · Privatsphäre-Check</span></div><div class="grid" id="gPrv"></div>
+  <canvas id="fpCvs" width="300" height="50" style="display:none"></canvas>
+  <footer>Alle Daten werden lokal in deinem Browser ausgelesen.<br>Es werden keine Daten gespeichert, übertragen oder weitergegeben.<br><span style="opacity:.4">Diese Seite dient ausschließlich der Aufklärung und Sensibilisierung.</span></footer>
+</div>
+
+<script>
+// ── Hilfsfunktionen ───────────────────────────────────────
+var pad = function(n){ return ('0'+n).slice(-2); };
+var DAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+var MONS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+// JSONP — umgeht CORS komplett, funktioniert auch von file://
+function jsonp(url, cbParam, cbName, ms) {
+  ms = ms || 8000;
+  return new Promise(function(resolve, reject) {
+    var settled = false;
+    var timer = setTimeout(function() {
+      if (settled) return; settled = true;
+      cleanup(); reject(new Error('timeout'));
+    }, ms);
+    window[cbName] = function(data) {
+      if (settled) return; settled = true;
+      cleanup(); resolve(data);
+    };
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (scr.parentNode) scr.parentNode.removeChild(scr);
+    }
+    var scr = document.createElement('script');
+    scr.onerror = function() {
+      if (settled) return; settled = true;
+      cleanup(); reject(new Error('script load error'));
+    };
+    scr.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + cbParam + '=' + cbName;
+    document.head.appendChild(scr);
+  });
+}
+
+// fetch — einfach und robust, kein AbortController
+function fetchJSON(url, ms) {
+  ms = ms || 7000;
+  var done = false;
+  var timer;
+  var p = new Promise(function(resolve, reject) {
+    timer = setTimeout(function() { done=true; reject(new Error('timeout')); }, ms);
+    fetch(url, { cache: 'no-store' })
+      .then(function(r) {
+        if (done) return;
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        if (done) return;
+        done = true; clearTimeout(timer); resolve(data);
+      })
+      .catch(function(err) {
+        if (done) return;
+        done = true; clearTimeout(timer); reject(err);
+      });
+  });
+  return p;
+}
+
+// DOM-Helfer
+function sv(id, content, asHTML) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('loading');
+  if (asHTML) el.innerHTML = content; else el.textContent = content;
+}
+function ss(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
+
+// Karte anlegen
+function mkCard(gid, cls, label, title, vid, o) {
+  o = o || {};
+  var g = document.getElementById(gid);
+  var d = document.createElement('div');
+  d.className = 'card ' + cls + (o.wide ? ' wide' : '');
+  var h = '<div class="clbl">' + label + '</div>'
+        + '<div class="ctit">' + title + '</div>'
+        + '<div class="cval loading" id="' + vid + '">Wird geladen\u2026</div>';
+  if (o.sub)  h += '<div class="csub"  id="' + o.sub  + '"></div>';
+  if (o.sub2) h += '<div class="csub2" id="' + o.sub2 + '"></div>';
+  if (o.xtra) h += o.xtra;
+  if (o.warn) h += '<div class="cwarn" id="' + o.warn + '"></div>';
+  d.innerHTML = h;
+  g.appendChild(d);
+}
+
+// ── Uhr ───────────────────────────────────────────────────
+var CC = document.getElementById('clkCvs');
+var CX = CC.getContext('2d');
+var CW = CC.width, CR = CW / 2;
+var tOff = 0;        // Zeitversatz Server - Lokal (ms)
+var online = false;
+var started = false;
+
+function nowA() { return new Date(Date.now() + tOff); }
+
+// Zeitquellen
+var TSRC = [
+  function() {
+    return fetchJSON('https://worldtimeapi.org/api/timezone/Etc/UTC').then(function(d) {
+      var ms = new Date(d.utc_datetime || d.datetime).getTime();
+      if (!ms) throw new Error('bad');
+      return ms;
+    });
+  },
+  function() {
+    return fetchJSON('https://timeapi.io/api/time/current/zone?timeZone=UTC').then(function(d) {
+      if (!d || !d.year) throw new Error('bad');
+      return Date.UTC(d.year, d.month-1, d.day, d.hour, d.minute, d.seconds);
+    });
+  }
+];
+
+function syncTime() {
+  var idx = 0;
+  function next() {
+    if (idx >= TSRC.length) {
+      online = false; updateSyncBadge(); return;
+    }
+    var fn = TSRC[idx++];
+    var t0 = Date.now();
+    fn().then(function(serverMs) {
+      tOff = serverMs + (Date.now() - t0) / 2 - Date.now();
+      online = true;
+      if (!started) { started = true; requestAnimationFrame(tick); }
+      updateSyncBadge();
+    }).catch(function() { next(); });
+  }
+  next();
+}
+
+function updateSyncBadge() {
+  var el = document.getElementById('syncSt');
+  document.getElementById('tDisp').style.opacity = online ? '1' : '.35';
+  if (online) { el.textContent = '● ONLINE · Internet-synchronisiert'; el.className = 'syncs on'; }
+  else        { el.textContent = '✕ OFFLINE · Uhr angehalten';          el.className = 'syncs off'; }
+}
+
+function drawClock(t) {
+  var h=t.getHours()%12, m=t.getMinutes(), s=t.getSeconds(), ms=t.getMilliseconds();
+  var c = online ? '0,200,255' : '255,77,109';
+  CX.clearRect(0,0,CW,CW);
+  // Ring
+  CX.beginPath(); CX.arc(CR,CR,CR-4,0,Math.PI*2);
+  CX.strokeStyle='rgba('+c+',.35)'; CX.lineWidth=1.5; CX.stroke();
+  // Glow
+  var g=CX.createRadialGradient(CR,CR,0,CR,CR,CR);
+  g.addColorStop(0,'rgba('+c+',.06)'); g.addColorStop(1,'transparent');
+  CX.fillStyle=g; CX.beginPath(); CX.arc(CR,CR,CR,0,Math.PI*2); CX.fill();
+  // Minutenstriche
+  for(var i=0;i<60;i++){
+    var a=(i/60)*Math.PI*2-Math.PI/2, maj=i%5===0;
+    CX.beginPath();
+    CX.moveTo(CR+Math.cos(a)*(CR-(maj?14:8)),CR+Math.sin(a)*(CR-(maj?14:8)));
+    CX.lineTo(CR+Math.cos(a)*(CR-4),         CR+Math.sin(a)*(CR-4));
+    CX.strokeStyle='rgba('+c+','+(maj?.8:.2)+')'; CX.lineWidth=maj?2:1; CX.stroke();
+  }
+  // Zeiger
+  function hand(deg,len,w,col){
+    var rad=(deg-90)*Math.PI/180;
+    CX.save(); CX.translate(CR,CR); CX.rotate(rad);
+    CX.beginPath(); CX.moveTo(-w/2,len*.18); CX.lineTo(0,-len); CX.lineTo(w/2,len*.18);
+    CX.closePath(); CX.fillStyle=col; CX.fill(); CX.restore();
+  }
+  hand(((h+m/60+s/3600)/12)*360, CR*.50, 7, 'rgba(255,255,255,.95)');
+  hand(((m+s/60)/60)*360,         CR*.70, 5, 'rgba('+c+',.95)');
+  if (online) {
+    var sa=(((s+ms/1000)/60)*360-90)*Math.PI/180;
+    CX.save(); CX.translate(CR,CR); CX.rotate(sa);
+    CX.beginPath(); CX.moveTo(0,CR*.2); CX.lineTo(0,-(CR*.77));
+    CX.strokeStyle='#ff4d6d'; CX.lineWidth=1.5; CX.stroke(); CX.restore();
+  }
+  CX.beginPath(); CX.arc(CR,CR,5,0,Math.PI*2); CX.fillStyle=online?'#ff4d6d':'rgba(100,100,100,.5)'; CX.fill();
+  CX.beginPath(); CX.arc(CR,CR,2.5,0,Math.PI*2); CX.fillStyle='#fff'; CX.fill();
+}
+
+var lastS = -1;
+function tick() {
+  var t = nowA();
+  drawClock(t);
+  if (t.getSeconds() !== lastS) {
+    lastS = t.getSeconds();
+    document.getElementById('tDisp').textContent  = pad(t.getHours())+':'+pad(t.getMinutes())+':'+pad(t.getSeconds());
+    document.getElementById('dDisp').textContent  = DAYS[t.getDay()]+', '+t.getDate()+'. '+MONS[t.getMonth()]+' '+t.getFullYear();
+    document.getElementById('tzDisp').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  if (online) requestAnimationFrame(tick);
+  else setTimeout(function(){ requestAnimationFrame(tick); }, 500);
+}
+
+// Erste Zeichnung sofort (grau, lokale Zeit)
+drawClock(new Date());
+
+// Sync alle 5 Sekunden
+function syncLoop() { syncTime(); setTimeout(syncLoop, 5000); }
+syncLoop();
+window.addEventListener('offline', function(){ online=false; updateSyncBadge(); });
+window.addEventListener('online',  function(){ syncTime(); });
+
+// ── Karten anlegen ────────────────────────────────────────
+mkCard('gNet','net','// Netzwerk',      'Deine IP-Adresse',           'vIp',    {wide:true,sub:'vIpSub',warn:'vIpW'});
+mkCard('gNet','net','// Netzwerk',      'IPv4-Adresse',                'vIp4',   {sub:'vIp4Sub',warn:'vIp4W'});
+mkCard('gNet','net','// Netzwerk',      'IPv6-Adresse',                'vIp6',   {sub:'vIp6Sub',warn:'vIp6W'});
+mkCard('gNet','net','// Netzwerk',      'Dual-Stack / Leak-Check',     'vDual',  {wide:true,sub:'vDualSub',warn:'vDualW'});
+mkCard('gNet','net','// Netzwerk',      'WebRTC – lokale IPs',         'vRTC',   {sub:'vRTCSub',warn:'vRTCW'});
+mkCard('gNet','net','// Netzwerk',      'Standort (via IP)',           'vLoc',   {sub:'vLocSub',warn:'vLocW'});
+mkCard('gNet','net','// Netzwerk',      'Internet-Anbieter (ISP)',     'vIsp',   {sub:'vIspSub',warn:'vIspW'});
+mkCard('gBro','bro','// Browser',       'Browser & Version',           'vBro',   {sub:'vEng',warn:'vBroW'});
+mkCard('gBro','bro','// Browser',       'Bevorzugte Sprache(n)',       'vLang',  {warn:'vLangW'});
+mkCard('gDev','dev','// Gerät',         'Betriebssystem',              'vOs',    {sub:'vOsSub',sub2:'vOsSub2',warn:'vOsW'});
+mkCard('gDev','dev','// Gerät',         'Gerätetyp',                   'vDev',   {warn:'vDevW'});
+mkCard('gScr','scr','// Bildschirm',    'Auflösung (physisch)',         'vRes',   {sub:'vResSub',warn:'vResW'});
+mkCard('gScr','scr','// Bildschirm',    'Farb-Tiefe',                  'vCol');
+mkCard('gScr','dev','// Hardware',      'CPU-Kerne',                   'vCpu',   {warn:'vCpuW'});
+mkCard('gScr','dev','// Hardware',      'Arbeitsspeicher (RAM)',        'vRam',   {sub:'vRamSub'});
+mkCard('gScr','dev','// Hardware',      'GPU / Grafikkarte',            'vGpu',   {sub:'vGpuSub',warn:'vGpuW'});
+mkCard('gScr','dev','// Hardware',      'Batterie & Ladezustand',       'vBat',   {sub:'vBatSub',warn:'vBatW',xtra:'<div id="vBatVis" style="margin-top:8px"></div>'});
+mkCard('gCon','con','// Verbindung',    'Verbindungstyp',               'vCT',    {warn:'vCTW'});
+mkCard('gCon','con','// Verbindung',    'Verbindungsgeschwindigkeit',   'vCS',    {sub:'vCSSub',warn:'vCSW'});
+mkCard('gCon','net','// Netzwerk',      'VPN / Proxy erkannt?',         'vVpn',   {sub:'vVpnSub',warn:'vVpnW'});
+mkCard('gFpr','fpr','// Fingerprint',   'Einzigartigkeit deines Browsers','vFPS', {wide:true,sub:'vFPSub',warn:'vFPW',
+  xtra:'<div class="fpw" id="fpWrap" style="display:none"><div class="fpn" id="fpN">-</div>'
+      +'<div class="fpr2"><div class="fplbl" id="fpLbl"></div>'
+      +'<div class="fpbar"><div class="fpfill" id="fpFill"></div></div></div></div>'});
+mkCard('gFpr','fpr','// Fingerprint',   'WebGL / GPU-Renderer',         'vWGL',   {sub:'vWGLv',warn:'vWGLW'});
+mkCard('gFpr','fpr','// Fingerprint',   'Canvas-Fingerprint',           'vCFP',   {sub:'vCFPSub',warn:'vCFPW'});
+mkCard('gFpr','fpr','// Fingerprint',   'Adblocker erkannt?',           'vAdb',   {warn:'vAdbW'});
+mkCard('gPrv','prv','// Privatsphäre',  'Do Not Track (DNT)',           'vDNT',   {warn:'vDNTW'});
+mkCard('gPrv','prv','// Privatsphäre',  'Cookies',                      'vCook',  {warn:'vCookW'});
+mkCard('gPrv','prv','// Privatsphäre',  'Touchscreen',                  'vTouch');
+mkCard('gPrv','prv','// Privatsphäre',  'Wiedererkennungs-Test',        'vStor',  {sub:'vStorSub',warn:'vStorW'});
+
+// ── Browser-Erkennung ─────────────────────────────────────
+function getBrowserName(ua) {
+  if (/Vivaldi\//.test(ua))               return ['Vivaldi',         (ua.match(/Vivaldi\/([\d.]+)/)||[])[1]||'',    'Blink',  'anpassbarer Chromium-Fork'];
+  if (/OPR\//.test(ua))                   return [/Opera GX/.test(ua)?'Opera GX':'Opera', (ua.match(/OPR\/([\d.]+)/)||[])[1]||'', 'Blink', 'Chromium-basiert'];
+  if (/Edg\//.test(ua))                   return ['Microsoft Edge',  (ua.match(/Edg\/([\d.]+)/)||[])[1]||'',       'Blink',  'Chromium-basiert'];
+  if (/Firefox\//.test(ua))               return ['Mozilla Firefox', (ua.match(/Firefox\/([\d.]+)/)||[])[1]||'',   'Gecko',  ''];
+  if (/Safari\//.test(ua)&&!/Chrome/.test(ua)) return ['Apple Safari',(ua.match(/Version\/([\d.]+)/)||[])[1]||'', 'WebKit', ''];
+  if (/Chrome\//.test(ua))               return ['Google Chrome',    (ua.match(/Chrome\/([\d.]+)/)||[])[1]||'',    'Blink',  ''];
+  return ['Unbekannter Browser','','',''];
+}
+
+var UA = navigator.userAgent;
+var bravePromise = (navigator.brave && navigator.brave.isBrave)
+  ? navigator.brave.isBrave().then(function(b){ return b; }).catch(function(){ return false; })
+  : Promise.resolve(false);
+
+bravePromise.then(function(isBrave) {
+  var name, ver, engine, note;
+  if (isBrave) {
+    name='Brave Browser'; ver=(UA.match(/Chrome\/([\d.]+)/)||[])[1]||''; engine='Blink'; note='Datenschutz-fokussierter Chromium-Fork';
+  } else {
+    var r=getBrowserName(UA); name=r[0]; ver=r[1]; engine=r[2]; note=r[3];
+  }
+  sv('vBro', name + (ver?' '+ver:''));
+  ss('vEng', 'Rendering-Engine: ' + engine + (note?' · '+note:''));
+  ss('vBroW', 'Webseiten sehen welchen Browser du nutzt. Angriffe zielen auf veraltete Versionen. Halte deinen Browser stets aktuell!');
+  document.getElementById('vb').textContent = name + (ver?' '+ver:'');
+});
+
+// ── Betriebssystem ────────────────────────────────────────
+function winRel(major) {
+  return {20:'26H1',19:'26H1',18:'24H2',17:'24H1',16:'23H2',15:'22H2/23H1',13:'22H2'}[major] || null;
+}
+
+var tp = navigator.maxTouchPoints || 0;
+var isIPadOS  = /Macintosh/.test(UA) && tp > 1;
+var isIPad    = /iPad/.test(UA) || isIPadOS;
+var isIPhone  = /iPhone/.test(UA);
+var isAndroid = /Android/.test(UA);
+var isMobile  = /Mobi/.test(UA) || isIPhone || (isAndroid && /Mobile/.test(UA));
+
+// Gerät
+var devStr;
+if (isIPad)          devStr = '📱 Apple iPad (Tablet)';
+else if (isIPhone)   devStr = '📱 Apple iPhone (Smartphone)';
+else if (isAndroid && !isMobile) devStr = '📱 Android Tablet';
+else if (isMobile)   devStr = '📱 Smartphone';
+else                 devStr = '🖥 Desktop / Laptop';
+sv('vDev', devStr);
+ss('vDevW', 'Apps auf Smartphones und Tablets können auf Kamera, Mikrofon, Kontakte und Standortverlauf zugreifen. Installiere nur Apps aus vertrauenswürdigen Quellen!');
+
+// OS erkennen
+function osFromUA() {
+  if (/Windows NT 10\.0/.test(UA)) return { n:'Windows 10 / 11', s:'Firefox gibt keine genaue Version preis', s2:'In Edge/Chrome/Brave wäre Windows 11 exakt erkennbar' };
+  if (/Windows NT 6\.3/.test(UA))  return { n:'Windows 8.1', s:'', s2:'' };
+  if (/Windows NT 6\.2/.test(UA))  return { n:'Windows 8',   s:'', s2:'' };
+  if (/Windows NT 6\.1/.test(UA))  return { n:'Windows 7',   s:'', s2:'' };
+  var am=UA.match(/Android ([\d.]+)/); if(am) return { n:'Android '+am[1], s:'', s2:'' };
+  var mm=UA.match(/Mac OS X ([\d_]+)/); if(mm) return { n:'macOS '+mm[1].replace(/_/g,'.'), s:'', s2:'' };
+  if (/Linux/.test(UA)) return { n:'Linux', s:'', s2:'' };
+  return { n:navigator.platform||'Unbekannt', s:'', s2:'' };
+}
+
+function applyOS(n,s,s2){ sv('vOs',n); ss('vOsSub',s); ss('vOsSub2',s2); ss('vOsW','Das Betriebssystem verrät Sicherheitslücken. Veraltete Systeme ohne Updates sind ein häufiges Einfallstor für Angriffe.'); }
+
+if (isIPad) {
+  var iv=UA.match(/CPU OS ([\d_]+)/);
+  applyOS('iPadOS'+(iv?' '+iv[1].replace(/_/g,'.'):''), 'Apple iPad (via Touch-Punkte erkannt)', '');
+} else if (isIPhone) {
+  var iv2=UA.match(/CPU iPhone OS ([\d_]+)/);
+  applyOS('iOS'+(iv2?' '+iv2[1].replace(/_/g,'.'):''), 'Apple iPhone', '');
+} else if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+  navigator.userAgentData.getHighEntropyValues(['platform','platformVersion','architecture','bitness'])
+  .then(function(hi){
+    var plat=(hi.platform||'').toLowerCase();
+    if (plat.indexOf('windows')>=0) {
+      var maj=parseInt((hi.platformVersion||'0').split('.')[0],10);
+      var rel=winRel(maj);
+      var arch=hi.architecture?' · '+hi.architecture+(hi.bitness?'-'+hi.bitness:''):'';
+      applyOS((maj>=13?'Windows 11':'Windows 10')+(rel?' ('+rel+')':''), 'Plattform-Version: '+hi.platformVersion+arch, '');
+    } else if (plat.indexOf('mac')>=0) {
+      applyOS('macOS','Version: '+hi.platformVersion,'');
+    } else {
+      var o=osFromUA(); applyOS(o.n,o.s,o.s2);
+    }
+  }).catch(function(){ var o=osFromUA(); applyOS(o.n,o.s,o.s2); });
+} else {
+  var o=osFromUA(); applyOS(o.n,o.s,o.s2);
+}
+
+// ── Bildschirm & Hardware ─────────────────────────────────
+sv('vLang',(navigator.languages||[navigator.language]).join('  ·  '));
+ss('vLangW','Deine Browser-Sprache verrät Herkunft und Sprachkenntnisse und hilft, dich eindeutig zu identifizieren.');
+
+var dpr=window.devicePixelRatio||1;
+sv('vRes',Math.round(screen.width*dpr)+' × '+Math.round(screen.height*dpr)+' px');
+ss('vResSub','Skalierung: '+Math.round(dpr*100)+'%  ·  Logisch: '+screen.width+'×'+screen.height+'  ·  Viewport: '+window.innerWidth+'×'+window.innerHeight);
+ss('vResW','Bildschirmauflösung und Skalierung sind Teil des Browser-Fingerprints und ermöglichen Wiedererkennung ohne Cookies.');
+sv('vCol',screen.colorDepth+'-Bit ('+(screen.colorDepth>=24?'True Color':'High Color')+')');
+sv('vCpu',navigator.hardwareConcurrency?navigator.hardwareConcurrency+' logische Kerne':'Nicht verfügbar');
+ss('vCpuW','CPU-Kernanzahl gibt Rückschlüsse auf die Geräteklasse und ist Teil des Browser-Fingerprints.');
+if(navigator.deviceMemory){sv('vRam','≈ '+navigator.deviceMemory+' GB');ss('vRamSub','Absichtlich gerundeter Wert');}
+else{sv('vRam','Nicht freigegeben');ss('vRamSub','Firefox schützt diesen Wert · In Edge/Chrome/Brave sichtbar');}
+
+// GPU
+(function(){
+  try{
+    var gl=document.createElement('canvas').getContext('webgl')||document.createElement('canvas').getContext('experimental-webgl');
+    if(gl){
+      var dbg=gl.getExtension('WEBGL_debug_renderer_info');
+      if(dbg){
+        var rdr=gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'?';
+        var vnd=gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL)||'?';
+        sv('vGpu',rdr); ss('vGpuSub','Hersteller: '+vnd); ss('vGpuW','Deine Grafikkarte ist eindeutig identifizierbar. Renderer und Hersteller werden ohne Nachfrage übermittelt.');
+        sv('vWGL',rdr); ss('vWGLv','Hersteller: '+vnd); ss('vWGLW','Der GPU-Renderer macht deinen Browser nahezu einzigartig — Wiedererkennung ohne Cookies.');
+      } else {
+        sv('vGpu','Blockiert'); sv('vWGL','Debug-Info blockiert');
+      }
+    } else { sv('vGpu','Kein WebGL'); sv('vWGL','WebGL nicht unterstützt'); }
+  }catch(e){ sv('vGpu','Fehler'); sv('vWGL','Fehler'); }
+})();
+
+// Canvas-Fingerprint
+(function(){
+  try{
+    var fc=document.getElementById('fpCvs'), fx=fc.getContext('2d');
+    fx.textBaseline='top'; fx.font='14px Arial';
+    fx.fillStyle='#f60'; fx.fillRect(125,1,62,20);
+    fx.fillStyle='#069'; fx.fillText('Fingerprint \uD83C\uDF0D',2,15);
+    fx.fillStyle='rgba(102,204,0,.7)'; fx.fillText('Fingerprint \uD83C\uDF0D',4,17);
+    var url=fc.toDataURL(), h=0;
+    for(var i=0;i<url.length;i++){h=(h<<5)-h+url.charCodeAt(i);h|=0;}
+    sv('vCFP','0x'+(h>>>0).toString(16).toUpperCase().padStart(8,'0'));
+    ss('vCFPSub','Einzigartiger Rendering-Hash dieser GPU+Browser-Kombination');
+    ss('vCFPW','Dieser Hash bleibt auf deinem Gerät immer gleich — cookiefreie Wiedererkennung über Monate.');
+  }catch(e){sv('vCFP','Nicht verfügbar');}
+})();
+
+// Adblocker
+(function(){
+  var bait=document.createElement('div');
+  bait.className='adsbox'; bait.style.cssText='position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+  bait.innerHTML='&nbsp;'; document.body.appendChild(bait);
+  setTimeout(function(){
+    var blocked=bait.offsetHeight===0||!bait.offsetParent;
+    if(bait.parentNode)bait.parentNode.removeChild(bait);
+    sv('vAdb',blocked?'✓ Adblocker aktiv':'✗ Kein Adblocker erkannt');
+    ss('vAdbW',blocked?'Gut! Adblocker schützt vor Tracking-Scripts. Empfehlung: uBlock Origin.':'Ohne Adblocker laden Dutzende Tracking-Scripts im Hintergrund. Empfehlung: uBlock Origin installieren.');
+  },200);
+})();
+
+// Verbindungstyp
+(function(){
+  var cn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(cn){
+    var tm={wifi:'📶 WLAN',ethernet:'🔌 Kabel',cellular:'📡 Mobilfunk',none:'Keine',unknown:'Unbekannt'};
+    sv('vCT',tm[cn.type]||tm[cn.effectiveType]||cn.effectiveType||'Unbekannt');
+    ss('vCTW','Verbindungstyp verrät ob du zu Hause, unterwegs oder im Büro bist.');
+    if(cn.downlink||cn.rtt){
+      sv('vCS',cn.downlink?'≈ '+cn.downlink+' Mbit/s':'Unbekannt');
+      ss('vCSSub',cn.rtt?'Latenz: '+cn.rtt+' ms':'');
+      ss('vCSW','Geschwindigkeit und Latenz geben Rückschlüsse auf den Standorttyp.');
+    }else{sv('vCS','Nicht verfügbar');ss('vCSSub','Browser gibt keine Geschwindigkeit preis');}
+  }else{
+    sv('vCT','Nicht verfügbar'); ss('vCTW','Firefox stellt Verbindungsinfos aus Datenschutzgründen nicht bereit.');
+    sv('vCS','Nicht verfügbar');
+  }
+})();
+
+// Fingerprint-Score
+(function(){
+  var s=33; // UA+Zeitzone+Canvas immer
+  if(navigator.hardwareConcurrency)s+=8;
+  if(navigator.deviceMemory)s+=6;
+  if(window.devicePixelRatio!==1)s+=7;
+  try{var g2=document.createElement('canvas').getContext('webgl');if(g2&&g2.getExtension('WEBGL_debug_renderer_info'))s+=20;}catch(e){}
+  if(screen.width*screen.height>1920*1080)s+=5;
+  if((navigator.languages||[]).length>1)s+=4;
+  if(navigator.connection)s+=5;
+  s=Math.min(s,97);
+  var lbl=s>=80?'Sehr eindeutig identifizierbar':s>=60?'Gut identifizierbar':s>=40?'Mäßig':'Schwer identifizierbar';
+  sv('vFPS','');
+  var w=document.getElementById('fpWrap'); if(w)w.style.display='flex';
+  var n=document.getElementById('fpN'); if(n)n.textContent=s;
+  var l=document.getElementById('fpLbl'); if(l)l.textContent=lbl;
+  setTimeout(function(){var f=document.getElementById('fpFill');if(f)f.style.width=s+'%';},300);
+  ss('vFPSub','Fingerprint-Score basierend auf messbaren Browser-Merkmalen (0–100)');
+  ss('vFPW','Browser-Fingerprinting braucht keine Cookies. Die Kombination deiner Merkmale macht dich in Millisekunden wiedererkennbar — auch nach Cookie-Löschung.');
+})();
+
+// Batterie
+if(navigator.getBattery){
+  navigator.getBattery().then(function(bat){
+    function upd(){
+      var p=Math.round(bat.level*100), ch=bat.charging, tl=ch?bat.chargingTime:bat.dischargingTime, ts='';
+      if(tl&&tl!==Infinity){var hh=Math.floor(tl/3600),mm=Math.floor((tl%3600)/60);ts=hh>0?' · noch '+hh+'h '+mm+'min':' · noch '+mm+' min';}
+      sv('vBat',p+'%  '+(ch?'⚡ Lädt':'🔋 Akkubetrieb')+ts);
+      ss('vBatSub',ch?'Am Ladegerät':'Nicht am Ladegerät');
+      var cls=p<20?'low':p<50?'mid':'';
+      document.getElementById('vBatVis').innerHTML='<div class="batv"><div class="batb"><div class="batf '+cls+'" style="width:'+p+'%"></div></div><span style="font-size:12px;color:var(--muted)">'+p+'%</span></div>';
+      ss('vBatW','Batteriestand wurde für Battery-Fingerprinting missbraucht: ein fast leerer Akku ist selten und macht kurzzeitig eindeutig identifizierbar. Firefox hat diese API deshalb eingeschränkt.');
+    }
+    upd(); bat.addEventListener('levelchange',upd); bat.addEventListener('chargingchange',upd);
+  }).catch(function(){sv('vBat','Nicht verfügbar');ss('vBatSub','Browser verweigert Zugriff (Datenschutz)');});
+}else{sv('vBat','Nicht verfügbar');ss('vBatSub','Nicht unterstützt');}
+
+// Wiedererkennung
+(function(){
+  try{
+    var key='__fpv__', st=localStorage.getItem(key), now=new Date();
+    if(st){
+      var prev=new Date(parseInt(st,10)), diff=Math.round((now-prev)/60000);
+      var ago=diff<60?'vor '+diff+' Min.':diff<1440?'vor '+Math.round(diff/60)+' Std.':'vor '+Math.round(diff/1440)+' Tagen';
+      sv('vStor','⚠ Dieses Gerät wurde erkannt!'); ss('vStorSub','Letzter Besuch: '+ago+' ('+prev.toLocaleString('de-DE')+')');
+      ss('vStorW','Webseiten können dich ohne Cookies wiedererkennen — über localStorage oder IndexedDB. Bleibt bis zum expliziten Löschen des Browser-Speichers.');
+    }else{
+      sv('vStor','Erstbesuch — ID wird gespeichert'); ss('vStorSub','Beim nächsten Laden wirst du wiedererkannt!');
+      ss('vStorW','Eine Erkennungs-ID wurde gerade in deinem Browser gespeichert. Lade diese Seite neu und sieh, wie einfach Wiedererkennung ohne Cookies funktioniert.');
+    }
+    localStorage.setItem(key,now.getTime().toString());
+  }catch(e){sv('vStor','Nicht verfügbar');ss('vStorSub','Browser blockiert localStorage');}
+})();
+
+// Privatsphäre
+var dnt=navigator.doNotTrack||window.doNotTrack;
+sv('vDNT',dnt==='1'?'✓ Aktiviert (DNT=1)':dnt==='0'?'✗ Deaktiviert':'Nicht gesetzt');
+ss('vDNTW','Do Not Track ist ein freiwilliger Standard — fast keine Webseite hält sich daran. Kein technischer Schutz.');
+sv('vCook',navigator.cookieEnabled?'✓ Aktiviert':'✗ Deaktiviert');
+ss('vCookW','Cookies werden genutzt um dich seitenübergreifend zu tracken. Regelmäßig löschen oder uBlock Origin nutzen.');
+sv('vTouch',navigator.maxTouchPoints>0?'✓ Ja · '+navigator.maxTouchPoints+' Punkte':'✗ Kein Touchscreen');
+
+// ── IPv4 / IPv6 / Dual-Stack / WebRTC ─────────────────────
+
+// IPv4-only Abfrage
+var _ip4 = null, _ip6 = null, _ip4cc = null, _ip6cc = null;
+
+function fetchIPv4() {
+  // icanhazip liefert reine IP als Text
+  fetch('https://ipv4.icanhazip.com', { cache:'no-store' })
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      _ip4 = t.trim();
+      sv('vIp4', '<span style="color:var(--accent);letter-spacing:1px">'+_ip4+'</span>', true);
+      ss('vIp4Sub', 'Protokoll: IPv4 · wird von deinem Router / ISP vergeben');
+      ss('vIp4W', 'Deine IPv4-Adresse ist das klassische Identifikationsmerkmal. Sie wird von fast allen Webseiten geloggt.');
+      // Geo für IPv4
+      return fetchJSON('https://ipapi.co/'+_ip4+'/json/');
+    })
+    .then(function(d){
+      if(d&&d.country) { _ip4cc=d.country; }
+      dualCheck();
+    })
+    .catch(function(){
+      sv('vIp4', '⚠ Nicht abrufbar');
+      ss('vIp4Sub', 'IPv4-Endpunkt nicht erreichbar (Blocker / kein IPv4?)');
+      ss('vIp4W', 'Kein IPv4 erkannt — möglicherweise nur IPv6-Verbindung aktiv.');
+      dualCheck();
+    });
+}
+
+// IPv6-only Abfrage
+function fetchIPv6() {
+  fetch('https://ipv6.icanhazip.com', { cache:'no-store' })
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      _ip6 = t.trim();
+      sv('vIp6', '<span style="color:#39ff85;letter-spacing:1px">'+_ip6+'</span>', true);
+      ss('vIp6Sub', 'Protokoll: IPv6 · modernes 128-Bit-Adressformat');
+      ss('vIp6W', 'IPv6-Adressen werden von vielen VPN-Clients NICHT getunnelt — dadurch kann deine echte IP trotz VPN sichtbar sein (IPv6-Leak)!');
+      // Geo für IPv6
+      return fetchJSON('https://ipapi.co/'+encodeURIComponent(_ip6)+'/json/');
+    })
+    .then(function(d){
+      if(d&&d.country) { _ip6cc=d.country; }
+      dualCheck();
+    })
+    .catch(function(){
+      sv('vIp6', '✓ Nicht vorhanden');
+      ss('vIp6Sub', 'IPv6 nicht aktiv oder vom Browser blockiert');
+      ss('vIp6W', 'Kein IPv6 erkannt. Das ist datenschutztechnisch unkritisch — du hast keine zweite IP, die leaken könnte.');
+      dualCheck();
+    });
+}
+
+// Dual-Stack-Auswertung (wird aufgerufen sobald beide Abfragen abgeschlossen sind)
+var _dualDone = 0;
+function dualCheck() {
+  _dualDone++;
+  if (_dualDone < 2) return; // Warten bis beide fertig
+  var both = _ip4 && _ip6;
+  var only4 = _ip4 && !_ip6;
+  var only6 = !_ip4 && _ip6;
+  var landMismatch = both && _ip4cc && _ip6cc && _ip4cc !== _ip6cc;
+
+  if (landMismatch) {
+    sv('vDual', '<span class="bwarn">⚠ IPv6-LEAK WAHRSCHEINLICH!</span>', true);
+    ss('vDualSub', 'IPv4-Land: '+_ip4cc+'  ·  IPv6-Land: '+_ip6cc+' — unterschiedliche Herkunft!');
+    ss('vDualW', 'KRITISCH: Dein VPN schützt offenbar nur IPv4. Die IPv6-Adresse zeigt in ein anderes Land und verrät deinen echten Standort. VPN-Anbieter prüfen und IPv6-Absicherung aktivieren!');
+  } else if (both && _ip4cc && _ip6cc) {
+    sv('vDual', '<span class="bok">✓ Dual-Stack · Kein Leak erkannt</span>', true);
+    ss('vDualSub', 'IPv4 und IPv6 zeigen in dasselbe Land ('+_ip4cc+')');
+    ss('vDualW', 'Beide Protokollstacks sind aktiv und stimmen überein. Trotzdem: Ein VPN mit lokalem Server (z.B. DE→DE) ist so kaum erkennbar.');
+  } else if (only4) {
+    sv('vDual', 'ℹ Nur IPv4 aktiv (Single-Stack)');
+    ss('vDualSub', 'IPv6 nicht vorhanden — kein Dual-Stack-Leak möglich');
+    ss('vDualW', 'Single-Stack IPv4: Du hast keine zweite Protokollebene, über die ein Leak entstehen könnte.');
+  } else if (only6) {
+    sv('vDual', 'ℹ Nur IPv6 aktiv (Single-Stack)');
+    ss('vDualSub', 'IPv4 nicht vorhanden — seltene Konfiguration');
+    ss('vDualW', 'Reines IPv6-Netzwerk. Prüfen ob alle Dienste erreichbar sind.');
+  } else {
+    sv('vDual', '⚠ Keine IP ermittelt');
+    ss('vDualSub', 'Beide Endpunkte nicht erreichbar — Blocker aktiv?');
+    ss('vDualW', 'Beide IP-Endpunkte wurden geblockt. Schutzschild in der Adressleiste für diese Seite deaktivieren.');
+  }
+}
+
+// WebRTC – lokale und externe IPs (beide Protokollversionen)
+(function(){
+  try {
+    var pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    var found4=[], found6=[], foundLocal=[];
+    pc.createDataChannel('');
+    pc.onicecandidate = function(e){
+      if(!e||!e.candidate||!e.candidate.candidate) {
+        // Abgeschlossen
+        pc.close();
+        var out4 = found4.length ? found4.join('  ·  ') : '–';
+        var out6 = found6.length ? found6.join('  ·  ') : '–';
+        var outL = foundLocal.length ? foundLocal.join('  ·  ') : '–';
+        var display = 'Öffentlich IPv4: '+out4+'\nÖffentlich IPv6: '+out6+'\nLokal: '+outL;
+        sv('vRTC', '<span style="line-height:1.8;font-size:13px">'+
+          'IPv4: <span style="color:var(--accent)">'+out4+'</span><br>'+
+          'IPv6: <span style="color:#39ff85">'+out6+'</span><br>'+
+          'Lokal: <span style="color:var(--warn)">'+outL+'</span></span>', true);
+        ss('vRTCSub', 'Via WebRTC-ICE-Kandidaten ausgelesen');
+        var warn = (found6.length > 0)
+          ? 'WebRTC gibt deine IPv6-Adresse direkt preis — auch wenn du ein VPN nutzt! Lösung: WebRTC in Firefox deaktivieren (about:config → media.peerconnection.enabled = false) oder uBlock Origin nutzen.'
+          : 'WebRTC gibt lokale Netzwerkdaten preis. Kein IPv6-Leak erkannt.';
+        ss('vRTCW', warn);
+        return;
+      }
+      var cand = e.candidate.candidate;
+      // IPv6 global
+      var m6 = cand.match(/([0-9a-f]{1,4}(?::[0-9a-f]{0,4}){5,7})/i);
+      if(m6 && m6[1] !== '::1' && !m6[1].startsWith('fe80') && found6.indexOf(m6[1])<0) found6.push(m6[1]);
+      // IPv4
+      var m4 = cand.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+      if(m4){
+        var ip=m4[1];
+        if(/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip)){
+          if(foundLocal.indexOf(ip)<0) foundLocal.push(ip);
+        } else {
+          if(found4.indexOf(ip)<0) found4.push(ip);
+        }
+      }
+      // link-local IPv6
+      var ml = cand.match(/(fe80:[0-9a-f:]+)/i);
+      if(ml && foundLocal.indexOf(ml[1])<0) foundLocal.push(ml[1]);
+    };
+    pc.createOffer().then(function(o){ pc.setLocalDescription(o); });
+    // Timeout falls kein end-of-candidates
+    setTimeout(function(){
+      pc.close();
+      if(!document.getElementById('vRTC').textContent||document.getElementById('vRTC').classList.contains('loading')){
+        sv('vRTC','WebRTC blockiert oder keine Kandidaten');
+        ss('vRTCSub','Browser oder Erweiterung verhindert WebRTC-Zugriff — gut für die Privatsphäre!');
+        ss('vRTCW','Kein WebRTC-Leak möglich da blockiert.');
+      }
+    }, 5000);
+  } catch(e) {
+    sv('vRTC','WebRTC nicht verfügbar');
+    ss('vRTCSub','Browser unterstützt RTCPeerConnection nicht');
+  }
+})();
+
+// Beide IP-Abfragen starten
+fetchIPv4();
+fetchIPv6();
+
+// ── IP + Geo ──────────────────────────────────────────────
+var _cc=null, _proxy=null;
+
+function vpnCheck() {
+  var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+  var map={'Europe/Berlin':'DE','Europe/Paris':'FR','Europe/London':'GB','Europe/Madrid':'ES','Europe/Rome':'IT',
+    'Europe/Amsterdam':'NL','Europe/Brussels':'BE','Europe/Vienna':'AT','Europe/Zurich':'CH','Europe/Luxembourg':'LU',
+    'Europe/Warsaw':'PL','Europe/Prague':'CZ','America/New_York':'US','America/Chicago':'US','America/Denver':'US',
+    'America/Los_Angeles':'US','America/Toronto':'CA','Asia/Tokyo':'JP','Asia/Shanghai':'CN','Asia/Kolkata':'IN',
+    'Australia/Sydney':'AU','Europe/Moscow':'RU','Europe/Stockholm':'SE','Europe/Oslo':'NO','Europe/Lisbon':'PT',
+    'Europe/Athens':'GR','Europe/Budapest':'HU','Europe/Bucharest':'RO'};
+  var tzC=map[tz]||null;
+  var hints=[];
+  if(tzC&&_cc&&tzC!==_cc) hints.push('IP-Land ('+_cc+') ≠ Zeitzone ('+tzC+')');
+  if(_proxy===true)        hints.push('IP als Datacenter / Hosting erkannt');
+  if(hints.length>0){
+    sv('vVpn','<span class="bwarn">⚠ VPN / Proxy wahrscheinlich</span>',true);
+    ss('vVpnSub',hints.join('  ·  '));
+    ss('vVpnW','Hinweis erkannt. VPNs mit Server im selben Land (z.B. NordVPN DE→DE) sind kaum erkennbar — das ist der Datenschutzvorteil eines VPNs.');
+  }else if(_cc){
+    sv('vVpn','<span class="bok">✓ Kein eindeutiger Hinweis</span>',true);
+    ss('vVpnSub','Zeitzone und IP-Land stimmen überein · Kein Datacenter-Flag');
+    ss('vVpnW','Kein Verdacht ≠ kein VPN. VPNs mit lokalem Server sind kaum erkennbar. Diese Methode erkennt nur Auslands-VPNs und bekannte Datacenter-IPs.');
+  }else{
+    sv('vVpn','Wird geprüft\u2026'); ss('vVpnSub','Warte auf Geo-Daten\u2026');
+  }
+}
+
+function applyGeo(ip,city,region,country,cc,lat,lon,isp,asn,proxy){
+  _cc=cc; _proxy=proxy||false;
+  sv('vIp','<div class="ipb"><div class="dot"></div>'+ip+'</div>',true);
+  ss('vIpSub','Protokoll: IPv'+(ip.indexOf(':')>=0?'6 (modernes Internet)':'4'));
+  ss('vIpW','Deine IP-Adresse verrät deinen ungefähren Standort — oft auf Stadtebene. Jede Webseite speichert sie in Server-Logs.');
+  sv('vLoc',(city||'?')+', '+(region||'?'));
+  ss('vLocSub',(country||'?')+'  ·  '+Number(lat).toFixed(4)+'°N, '+Number(lon).toFixed(4)+'°E');
+  ss('vLocW','Webseiten kennen deine Stadt — ohne dass du einen Standort freigegeben hast. Nur via IP-Adresse.');
+  sv('vIsp',isp||'–'); ss('vIspSub',asn||'');
+  ss('vIspW','Dein Internet-Anbieter sieht alle unverschlüsselten Anfragen. Per Vorratsdatenspeicherung werden Verbindungsdaten gespeichert.');
+  vpnCheck();
+}
+
+function geoError(){
+  sv('vIp','⚠ IP nicht abrufbar');
+  ss('vIpSub','Tipp: Schutz-Schild in der Adressleiste → für diese Seite deaktivieren');
+  sv('vLoc','Nicht verfügbar'); sv('vIsp','Nicht verfügbar'); vpnCheck();
+}
+
+// Geo laden — JSONP zuerst (kein CORS), dann fetch-Fallbacks
+jsonp('https://ip-api.com/json/?fields=status,query,city,regionName,country,countryCode,lat,lon,isp,as,proxy,hosting','callback','_g1')
+.then(function(d){
+  if(d&&d.status==='success'){applyGeo(d.query,d.city,d.regionName,d.country,d.countryCode,d.lat,d.lon,d.isp,d.as,d.proxy||d.hosting);return;}
+  throw new Error('bad');
+}).catch(function(){
+  return jsonp('https://ipinfo.io/json','callback','_g2').then(function(d){
+    if(d&&d.ip){var p=d.loc?d.loc.split(',').map(Number):[0,0];applyGeo(d.ip,d.city||'?',d.region||'?',d.country||'?',d.country||'',p[0],p[1],d.org||'','',false);return;}
+    throw new Error('bad');
+  });
+}).catch(function(){
+  return fetchJSON('https://ipwho.is/').then(function(d){
+    if(d&&d.ip&&d.success!==false){applyGeo(d.ip,d.city,d.region,d.country,d.country_code,d.latitude,d.longitude,(d.connection&&d.connection.isp)||d.org||'',d.connection&&d.connection.asn?'AS'+d.connection.asn:'',false);return;}
+    throw new Error('bad');
+  });
+}).catch(function(){
+  return fetchJSON('https://ipapi.co/json/').then(function(d){
+    if(d&&d.ip&&!d.error){applyGeo(d.ip,d.city,d.region,d.country_name,d.country,d.latitude,d.longitude,d.org||'',d.asn||'',false);return;}
+    throw new Error('bad');
+  });
+}).catch(function(){ geoError(); });
+</script>
+
+</body>
+</html>
